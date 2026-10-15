@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Fort Architects" />
+  <title>Rivendell Fort Architects: East Coast States & Capitals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-heading: 'Fredoka', sans-serif;
+      --font-body: 'Nunito', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      font-family: var(--font-body);
+      background: linear-gradient(135deg, #0b1120 0%, #1e1b4b 55%, #2e1065 100%);
+      color: #f8fafc;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      min-height: 100vh;
+      touch-action: manipulation;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: var(--font-heading);
+      letter-spacing: 0.02em;
+    }
+
+    /* Interactive Map State Styling */
+    .state-shape {
+      stroke: #0f172a;
+      stroke-width: 2.2;
+      stroke-linejoin: round;
+      transition: fill 0.25s ease, filter 0.2s ease;
+      cursor: pointer;
+    }
+    .state-shape:hover, .state-shape:active {
+      filter: brightness(1.18) drop-shadow(0 0 8px rgba(255,255,255,0.5));
+    }
+    .state-unmastered { fill: #cbd5e1; }
+    .state-region-active { fill: #93c5fd; }
+    .state-mastered-1 { fill: #34d399; }
+    .state-mastered-2 { fill: #60a5fa; }
+    .state-mastered-3 { fill: #f472b6; }
+    .state-mastered-4 { fill: #fbbf24; }
+
+    @keyframes targetPulse {
+      0%, 100% {
+        fill: #f59e0b;
+        filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.95));
+      }
+      50% {
+        fill: #fde047;
+        filter: drop-shadow(0 0 22px rgba(253, 224, 71, 1));
+      }
+    }
+    .state-highlight-target {
+      animation: targetPulse 1.1s infinite ease-in-out !important;
+      stroke: #ffffff !important;
+      stroke-width: 3.5 !important;
+    }
+
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .shake-anim {
+      animation: wrongShake 0.42s ease-in-out;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      75% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-in {
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.42; }
+    }
+    .twinkle-bulb {
+      animation: twinkle 1.6s ease-in-out infinite;
+    }
+    .twinkle-bulb-alt {
+      animation: twinkle 1.6s ease-in-out 0.8s infinite;
+    }
+
+    @keyframes boingBounce {
+      0%, 100% { transform: scale(1, 1) translateY(0); }
+      25% { transform: scale(1.18, 0.78) translateY(8px); }
+      50% { transform: scale(0.88, 1.18) translateY(-26px); }
+      75% { transform: scale(1.06, 0.94) translateY(4px); }
+    }
+    .boing-anim {
+      animation: boingBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes discoRaysSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .disco-spin {
+      animation: discoRaysSpin 9s linear infinite;
+    }
+
+    /* Tactile 3D Buttons */
+    .btn-3d {
+      transition: transform 0.1s ease, filter 0.15s ease;
+    }
+    .btn-3d:active {
+      transform: translateY(3px);
+    }
+
+    /* Draggable Fort Item Wrapper */
+    .fort-piece {
+      cursor: grab;
+      touch-action: none;
+    }
+    .fort-piece:active {
+      cursor: grabbing;
+    }
+    .fort-piece-selected {
+      filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.95));
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.65);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="select-none">
+
+  <!-- Full-Screen Confetti Canvas -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- TOP NAVIGATION BAR (2 MAIN MODES + STATS + CERTIFICATE) -->
+  <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-indigo-500/30 px-3 py-2 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand + Student Name -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-200">
+          <span class="text-xl sm:text-2xl">⛺</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-xl font-bold text-white leading-tight">
+              Rivendell Fort Architects
+            </h1>
+            <span class="hidden xl:inline-block text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/40">
+              Mrs. Lambertus's Class
+            </span>
+          </div>
+          <button onclick="openNameModal()" class="text-xs text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1">
+            <span>Architect:</span>
+            <span id="header-player-name" class="underline">Explorer</span>
+            <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-300">✏️</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TWO MAIN FULL-SCREEN MODE TABS + CERTIFICATE -->
+      <div class="flex items-center bg-slate-800/95 p-1 rounded-2xl border border-slate-700 order-3 md:order-2 w-full md:w-auto justify-center gap-1">
+        <button id="main-tab-quiz" onclick="switchTopTab('quiz')" class="flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-md">
+          <span>🗺️</span> <span>1. Map & Capitals Challenge</span>
+        </button>
+        <button id="main-tab-studio" onclick="switchTopTab('studio')" class="flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 text-slate-300 hover:text-white relative">
+          <span>🏰</span> <span>2. Interactive Fort Studio</span>
+          <span id="studio-Piece-count-pill" class="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-400 text-slate-950 font-extrabold">3/3</span>
+          <span id="fort-afford-ping" class="hidden w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute -top-0.5 -right-0.5"></span>
+        </button>
+        <button id="main-tab-cert" onclick="switchTopTab('cert')" class="px-3 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1 text-slate-300 hover:text-white">
+          <span>🏆</span> <span class="hidden sm:inline">Certificate</span>
+        </button>
+      </div>
+
+      <!-- Right Status: Stars, Streak, Accuracy, Region Badges, Sound -->
+      <div class="flex items-center gap-1.5 sm:gap-2 order-2 md:order-3">
+        <div class="flex items-center gap-1 bg-amber-500/20 border border-amber-400/50 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-2xl" title="Fort Stars to buy cushions & items!">
+          <span class="text-base sm:text-lg">⭐</span>
+          <span id="star-count-display" class="font-heading font-bold text-amber-300 text-sm sm:text-base">25</span>
+          <span id="multiplier-pill" class="hidden text-[10px] font-extrabold bg-amber-400 text-slate-950 px-1.5 rounded-full">1.5x</span>
+        </div>
+
+        <div class="flex items-center gap-1 bg-rose-500/20 border border-rose-400/40 px-2.5 py-1 sm:py-1.5 rounded-2xl" title="Current Streak / Best Streak (Unlocks Hot-Ticket Fort Items at 5, 10, 15, and 20!)">
+          <span class="text-sm sm:text-base">🔥</span>
+          <span id="streak-count-display" class="font-heading font-bold text-rose-300 text-sm sm:text-base">0</span>
+          <span id="best-streak-pill" class="hidden md:inline text-[10px] font-bold text-rose-200/80">/ ⚡0</span>
+        </div>
+
+        <div class="hidden lg:flex items-center gap-1 bg-cyan-500/20 border border-cyan-400/40 px-2.5 py-1.5 rounded-2xl" title="Overall Answer Accuracy (90%+ unlocks Precision Rewards!)">
+          <span class="text-sm">🎯</span>
+          <span id="accuracy-count-display" class="font-heading font-bold text-cyan-300 text-xs sm:text-sm">100%</span>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1 bg-emerald-500/20 border border-emerald-400/40 px-2.5 py-1.5 rounded-2xl" title="Regions Mastered">
+          <span class="text-sm">🛡️</span>
+          <span id="badge-count-display" class="font-heading font-bold text-emerald-300 text-xs sm:text-sm">0/4</span>
+        </div>
+
+        <button id="sound-toggle-btn" onclick="toggleMute()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-base transition" aria-label="Toggle Sound">
+          🔊
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTAINER -->
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-5 py-3 sm:py-4">
+
+    <!-- =====================================================================
+         TAB 1: MAP & CAPITALS CHALLENGE (FULL-SCREEN GEOGRAPHY ARENA)
+         ===================================================================== -->
+    <section id="section-quiz" class="space-y-4">
+
+      <!-- Region Selector Bar (Play Any Region Freely!) -->
+      <div class="bg-slate-900/90 border border-indigo-500/30 rounded-3xl p-3 sm:p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/40">
+              Choose Any Region
+            </span>
+            <span id="overall-mastery-banner" class="text-xs sm:text-sm font-bold text-emerald-300">
+              0 / 18 East Coast States Mastered
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openStudyGuideModal()" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-200 border border-indigo-400/30 text-xs font-bold">
+              📖 Study Sheet (All 18)
+            </button>
+            <button onclick="switchTopTab('studio')" class="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-heading font-bold text-xs shadow btn-3d">
+              🛋️ Go Build Fort →
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Region Selector Pills -->
+        <div id="region-selector-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Active Gameplay Split Screen (Map on Left, Shuffled Question Arena on Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        <!-- LEFT 7 COLS: HIGH-PRECISION EAST COAST SVG MAP + SMALL-STATE INSET -->
+        <div class="lg:col-span-7 bg-slate-900/90 border-2 border-indigo-500/40 rounded-3xl p-3 sm:p-4 shadow-2xl">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
+            <div class="flex items-center gap-2">
+              <span id="active-region-chip" class="text-xs sm:text-sm font-heading font-bold text-white">
+                🍑 Southeast Spotlight (This Week's New States)
+              </span>
+            </div>
+            <!-- Sub-mode selector: Mix, Find on Map, Match Capitals -->
+            <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
+              <button id="submode-mix" onclick="setPlaySubMode('mix')" class="px-2.5 py-1 rounded-lg text-[11px] font-heading font-bold bg-indigo-600 text-white">
+                ⚡ Mix Both
+              </button>
+              <button id="submode-map" onclick="setPlaySubMode('map')" class="px-2.5 py-1 rounded-lg text-[11px] font-heading font-bold text-slate-300 hover:text-white">
+                🗺️ Find on Map
+              </button>
+              <button id="submode-capital" onclick="setPlaySubMode('capital')" class="px-2.5 py-1 rounded-lg text-[11px] font-heading font-bold text-slate-300 hover:text-white">
+                🏛️ Capitals
+              </button>
+            </div>
+          </div>
+
+          <!-- SVG Map Viewport -->
+          <div class="relative w-full aspect-[4/4.1] sm:aspect-[4/3.65] bg-gradient-to-b from-sky-950 via-cyan-950 to-slate-950 rounded-2xl overflow-hidden border border-sky-400/30 shadow-inner">
+            <!-- Top-left Ocean Readout -->
+            <div class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700 pointer-events-none z-10">
+              <div class="text-[10px] font-bold text-sky-300 uppercase tracking-wider">🧭 East Coast Map</div>
+              <div id="map-hover-readout" class="text-xs font-extrabold text-white">Tap a state or zoom box!</div>
+            </div>
+
+            <!-- Interactive East Coast Schematic SVG -->
+            <svg id="east-coast-svg" viewBox="0 0 650 740" class="w-full h-full select-none">
+              <defs>
+                <pattern id="oceanGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
+                </pattern>
+              </defs>
+
+              <rect width="650" height="740" fill="url(#oceanGrid)" />
+
+              <!-- Neighboring Non-Playable Landmass Context -->
+              <g fill="#1e293b" stroke="#334155" stroke-width="1.5" opacity="0.55">
+                <path d="M 0,0 L 650,0 L 650,35 L 550,35 L 480,95 L 330,115 L 220,165 L 0,180 Z" />
+                <path d="M 0,180 L 220,165 L 220,255 L 228,315 L 200,365 L 180,415 L 145,455 L 112,485 L 105,605 L 0,605 Z" />
+              </g>
+
+              <!-- 18 PLAYABLE EAST COAST STATES -->
+              <g id="svg-states-layer">
+                <path id="state-ME" data-state="ME" class="state-shape state-unmastered" d="M 488,42 L 555,36 L 588,92 L 555,146 L 496,172 L 478,100 Z" />
+                <path id="state-NH" data-state="NH" class="state-shape state-unmastered" d="M 455,102 L 478,100 L 496,172 L 488,185 L 444,185 Z" />
+                <path id="state-VT" data-state="VT" class="state-shape state-unmastered" d="M 402,108 L 455,102 L 444,185 L 408,185 Z" />
+                <path id="state-MA" data-state="MA" class="state-shape state-unmastered" d="M 408,185 L 495,185 L 528,205 L 522,222 L 492,216 L 408,216 Z" />
+                <path id="state-RI" data-state="RI" class="state-shape state-unmastered" d="M 472,216 L 504,216 L 504,248 L 472,248 Z" />
+                <path id="state-CT" data-state="CT" class="state-shape state-unmastered" d="M 408,216 L 472,216 L 472,252 L 408,256 Z" />
+                <path id="state-NY" data-state="NY" class="state-shape state-unmastered" d="M 315,115 L 402,108 L 408,256 L 432,268 L 395,278 L 372,255 L 258,255 L 258,195 L 308,168 Z" />
+                <path id="state-PA" data-state="PA" class="state-shape state-unmastered" d="M 228,255 L 372,255 L 385,286 L 372,322 L 228,322 Z" />
+                <path id="state-NJ" data-state="NJ" class="state-shape state-unmastered" d="M 372,255 L 404,264 L 408,305 L 388,342 L 368,322 L 385,286 Z" />
+                <path id="state-DE" data-state="DE" class="state-shape state-unmastered" d="M 366,322 L 392,344 L 392,376 L 366,376 Z" />
+                <path id="state-MD" data-state="MD" class="state-shape state-unmastered" d="M 268,322 L 366,322 L 366,376 L 392,376 L 385,395 L 342,372 L 315,355 L 268,355 Z" />
+                <path id="state-WV" data-state="WV" class="state-shape state-unmastered" d="M 218,322 L 268,322 L 268,355 L 298,355 L 278,408 L 225,425 L 195,385 Z" />
+                <path id="state-VA" data-state="VA" class="state-shape state-unmastered" d="M 278,408 L 298,355 L 342,368 L 382,398 L 386,435 L 185,435 L 225,425 Z" />
+                <path id="state-NC" data-state="NC" class="state-shape state-unmastered" d="M 175,435 L 395,435 L 415,465 L 365,505 L 275,495 L 155,485 Z" />
+                <path id="state-SC" data-state="SC" class="state-shape state-unmastered" d="M 235,492 L 352,502 L 312,568 L 258,548 Z" />
+                <path id="state-GA" data-state="GA" class="state-shape state-unmastered" d="M 185,488 L 245,492 L 295,562 L 285,612 L 198,612 L 178,545 Z" />
+                <path id="state-AL" data-state="AL" class="state-shape state-unmastered" d="M 110,488 L 185,488 L 198,612 L 135,612 L 110,625 Z" />
+                <path id="state-FL" data-state="FL" class="state-shape state-unmastered" d="M 135,612 L 285,612 L 345,698 L 312,728 L 262,658 L 222,638 L 135,632 Z" />
+              </g>
+
+              <!-- SMALL COASTAL & NORTHERN STATES ZOOM CALLOUT BOXES (FOR EASY IPAD TOUCH) -->
+              <g id="small-state-callouts">
+                <line x1="428" y1="142" x2="544" y2="62" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="472" y1="152" x2="544" y2="112" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="518" y1="205" x2="544" y2="162" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="504" y1="232" x2="544" y2="212" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="450" y1="248" x2="544" y2="262" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="402" y1="295" x2="544" y2="312" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="392" y1="360" x2="544" y2="362" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+                <line x1="365" y1="382" x2="544" y2="412" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,4" />
+
+                <g class="cursor-pointer" onclick="handleStateTap('VT')">
+                  <rect id="callout-VT" x="544" y="42" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="58" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #1</text>
+                  <text id="callout-label-VT" x="592" y="72" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #1 (VT)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('NH')">
+                  <rect id="callout-NH" x="544" y="92" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="108" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #2</text>
+                  <text id="callout-label-NH" x="592" y="122" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #2 (NH)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('MA')">
+                  <rect id="callout-MA" x="544" y="142" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="158" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #3</text>
+                  <text id="callout-label-MA" x="592" y="172" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #3 (MA)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('RI')">
+                  <rect id="callout-RI" x="544" y="192" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="208" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #4</text>
+                  <text id="callout-label-RI" x="592" y="222" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #4 (RI)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('CT')">
+                  <rect id="callout-CT" x="544" y="242" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="258" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #5</text>
+                  <text id="callout-label-CT" x="592" y="272" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #5 (CT)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('NJ')">
+                  <rect id="callout-NJ" x="544" y="292" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="308" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #6</text>
+                  <text id="callout-label-NJ" x="592" y="322" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #6 (NJ)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('DE')">
+                  <rect id="callout-DE" x="544" y="342" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="358" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #7</text>
+                  <text id="callout-label-DE" x="592" y="372" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #7 (DE)</text>
+                </g>
+                <g class="cursor-pointer" onclick="handleStateTap('MD')">
+                  <rect id="callout-MD" x="544" y="392" width="96" height="38" rx="9" fill="#1e293b" stroke="#60a5fa" stroke-width="2" />
+                  <text x="592" y="408" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="800">🔎 Zoom Box #8</text>
+                  <text id="callout-label-MD" x="592" y="422" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="900">Tap #8 (MD)</text>
+                </g>
+              </g>
+
+              <g id="svg-labels-layer" pointer-events="none"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- RIGHT 5 COLS: SHUFFLED QUESTION ARENA & STREAK VAULT TRACKER -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+
+          <!-- Active Question Card -->
+          <div id="question-card" class="bg-slate-900/95 border-2 border-amber-400/50 rounded-3xl p-5 shadow-2xl">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span id="question-mode-badge" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                🏛️ Capital Architect
+              </span>
+              <span id="question-state-status" class="text-xs font-bold text-slate-400">
+                State Mastery: 0 / 2
+              </span>
+            </div>
+
+            <div class="min-h-[82px] flex flex-col justify-center mb-4">
+              <p id="question-subtitle" class="text-xs sm:text-sm font-bold text-indigo-300 uppercase tracking-wider mb-1">
+                Look at the glowing state on the map!
+              </p>
+              <h3 id="question-prompt" class="text-xl sm:text-2xl font-bold text-white leading-snug">
+                What is the capital of North Carolina?
+              </h3>
+            </div>
+
+            <!-- Helper banner when in Map Scout Mode -->
+            <div id="map-mode-helper" class="hidden bg-indigo-950/90 border-2 border-indigo-400/50 rounded-2xl p-4 text-center mb-3">
+              <div class="text-3xl mb-1 animate-bounce">👆🗺️</div>
+              <p class="font-heading font-bold text-indigo-200 text-base sm:text-lg">
+                Tap <span id="map-target-name-span" class="text-amber-300 underline">Georgia</span> directly on the East Coast Map!
+              </p>
+              <p class="text-xs text-slate-300 mt-1">
+                (Tip: You can also use the numbered 🔎 Zoom Boxes on the right side of the map for smaller states!)
+              </p>
+            </div>
+
+            <!-- 4 Fisher-Yates Shuffled Multiple Choice Buttons -->
+            <div id="choices-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+            <!-- Feedback / Memory Trick Box -->
+            <div id="feedback-box" class="hidden mt-4 p-3.5 rounded-2xl border text-sm font-bold transition-all"></div>
+          </div>
+
+          <!-- Streak & Accuracy Vault Progress + Fort Studio Bridge -->
+          <div class="bg-gradient-to-br from-slate-900 via-indigo-950/80 to-slate-900 border-2 border-amber-400/40 rounded-3xl p-4 sm:p-5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-11 h-11 rounded-2xl bg-rose-500/20 border border-rose-400/50 flex items-center justify-center text-2xl shrink-0">
+                  🔥
+                </div>
+                <div>
+                  <h4 class="font-heading font-bold text-white text-sm sm:text-base leading-tight">
+                    Streak & Accuracy Vault Rewards
+                  </h4>
+                  <p id="next-streak-goal-text" class="text-xs text-rose-200 font-bold">
+                    Next Unlock at 5🔥 in a row: ✨ String Lights & 🔦 Spotlight!
+                  </p>
+                </div>
+              </div>
+              <span id="streak-milestone-badge" class="px-2.5 py-1 rounded-xl bg-slate-800 border border-slate-700 text-xs font-extrabold text-amber-300">
+                0 / 5 🔥
+              </span>
+            </div>
+
+            <!-- 4 Streak Tier Mini Badges -->
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              <div id="tier-pill-5" class="p-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-slate-300">
+                <div>5🔥 Easy</div>
+                <div class="text-sm">✨🔦</div>
+              </div>
+              <div id="tier-pill-10" class="p-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-slate-300">
+                <div>10🔥 Med</div>
+                <div class="text-sm">👟 Boing</div>
+              </div>
+              <div id="tier-pill-15" class="p-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-slate-300">
+                <div>15🔥 Hard</div>
+                <div class="text-sm">🛝 Slide</div>
+              </div>
+              <div id="tier-pill-20" class="p-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-slate-300">
+                <div>20🔥 Mega</div>
+                <div class="text-sm">🪩 Disco</div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+              <div>
+                <div id="bridge-pieces-placed" class="text-xs font-bold text-emerald-300">
+                  3 in Fort / 3 Owned Pieces
+                </div>
+                <div class="text-[11px] text-slate-300">
+                  Spend <strong id="bridge-star-count" class="text-amber-300">25 ⭐</strong> on cushions, blankets & slides!
+                </div>
+              </div>
+              <button onclick="switchTopTab('studio')" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-slate-950 font-heading font-bold text-xs sm:text-sm shadow-lg btn-3d">
+                🏰 Open Fort Studio →
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 2: DEDICATED FULL-SCREEN INTERACTIVE FORT STUDIO SANDBOX
+         ===================================================================== -->
+    <section id="section-studio" class="hidden space-y-3">
+
+      <!-- Top Studio Controls Bar: Day/Night/Disco Mode, Store All, Back to Quiz -->
+      <div class="bg-slate-900/95 border border-amber-400/40 rounded-3xl p-3 sm:px-5 shadow-xl flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">🏰</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base sm:text-xl font-bold text-white leading-tight">
+                <span id="studio-owner-name">Architect</span>'s Modular Fort Studio
+              </h2>
+              <span id="studio-iteration-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                Build Iteration #1
+              </span>
+            </div>
+            <p class="text-xs text-slate-300">
+              Every cushion & blanket is earned! Drag to arrange, or tap your Mini Trampoline, Slide, or Disco Ball to play!
+            </p>
+          </div>
+        </div>
+
+        <!-- Studio Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Day / Cozy Night Mode Toggle -->
+          <button id="lighting-toggle-btn" onclick="toggleFortNightMode()" class="px-3.5 py-2 rounded-2xl bg-indigo-950 hover:bg-indigo-900 border-2 border-indigo-400 text-indigo-100 font-heading font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow btn-3d">
+            <span id="lighting-icon">🌙</span>
+            <span id="lighting-label">Cozy Night Mode</span>
+          </button>
+
+          <!-- Auto-Arrange Owned Pieces into Starter Structure -->
+          <button onclick="arrangeOwnedPiecesNeatly()" class="px-3 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 font-heading font-bold text-xs sm:text-sm btn-3d" title="Arrange your currently owned pieces neatly">
+            📐 Auto-Arrange Owned
+          </button>
+
+          <!-- Store All Placed Pieces Back Into Inventory Tray -->
+          <button onclick="clearAllPlacedFortItems()" class="px-3 py-2 rounded-2xl bg-slate-800 hover:bg-rose-950 border border-slate-600 hover:border-rose-400 text-slate-300 hover:text-rose-200 font-heading font-bold text-xs sm:text-sm btn-3d" title="Store all items back into your Owned Inventory so you can rebuild from scratch">
+            📦 Store All in Tray
+          </button>
+
+          <!-- Earn More Stars & Streaks -->
+          <button onclick="switchTopTab('quiz')" class="px-3.5 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-heading font-bold text-xs sm:text-sm shadow btn-3d">
+            +⭐ Earn Stars & Streaks
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN INTERACTIVE LIVING ROOM CANVAS + FLOATING INSPECTOR TOOLBAR -->
+      <div class="relative w-full aspect-[16/9.6] sm:aspect-[16/8.6] rounded-3xl overflow-hidden border-4 border-amber-400/50 shadow-2xl bg-slate-950 select-none">
+
+        <!-- FLOATING KID-FRIENDLY INSPECTOR TOOLBAR (Appears when any fort item is selected) -->
+        <div id="fort-inspector-bar" class="hidden absolute top-2.5 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 rounded-2xl px-3 py-2 shadow-2xl flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-[96%] w-max">
+          <span id="inspector-item-label" class="text-xs font-heading font-bold text-amber-300 mr-1 hidden sm:inline">
+            Selected Piece
+          </span>
+
+          <!-- Interactive Toy Action Button (Shown for Trampoline, Slide, Disco, Projector) -->
+          <button id="inspector-play-btn" onclick="triggerSelectedPieceToyAction()" class="hidden px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-heading font-extrabold text-xs shadow btn-3d">
+            🎉 Activate Toy!
+          </button>
+
+          <!-- Rotate Left / Right -->
+          <button onclick="transformSelectedPiece('rotate', -15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Tilt Left (-15°)">
+            ↺ Tilt L
+          </button>
+          <button onclick="transformSelectedPiece('rotate', 15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Tilt Right (+15°)">
+            ↻ Tilt R
+          </button>
+
+          <!-- Scale Smaller / Bigger -->
+          <button onclick="transformSelectedPiece('scale', -0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Shrink">
+            ➖ Smaller
+          </button>
+          <button onclick="transformSelectedPiece('scale', 0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Enlarge">
+            ➕ Bigger
+          </button>
+
+          <!-- Flip Horizontal -->
+          <button onclick="transformSelectedPiece('flip')" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Mirror Left/Right">
+            ↔️ Flip
+          </button>
+
+          <!-- 6 Fabric Color / Pattern Swatches -->
+          <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700" title="Change Fabric Color or Pattern">
+            <button onclick="setSelectedPieceColor(0)" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-white hover:scale-110 transition" title="Royal Blue"></button>
+            <button onclick="setSelectedPieceColor(1)" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white hover:scale-110 transition" title="Emerald Green"></button>
+            <button onclick="setSelectedPieceColor(2)" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-white hover:scale-110 transition" title="Sunset Coral"></button>
+            <button onclick="setSelectedPieceColor(3)" class="w-5 h-5 rounded-full bg-amber-400 border-2 border-white hover:scale-110 transition" title="Mustard Gold"></button>
+            <button onclick="setSelectedPieceColor(4)" class="w-5 h-5 rounded-full bg-purple-600 border-2 border-pink-300 hover:scale-110 transition" title="Cozy Berry Plaid"></button>
+            <button onclick="setSelectedPieceColor(5)" class="w-5 h-5 rounded-full bg-indigo-950 border-2 border-yellow-300 hover:scale-110 transition" title="Starry Galaxy"></button>
+          </div>
+
+          <!-- Layer Front / Back -->
+          <button onclick="transformSelectedPiece('layer', 1)" class="px-2 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Bring Forward">
+            ⬆️ Front
+          </button>
+          <button onclick="transformSelectedPiece('layer', -1)" class="px-2 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold btn-3d" title="Send Backward">
+            ⬇️ Back
+          </button>
+
+          <!-- Smart +1 More Button (Places from Owned Stock OR Buys +1 with Stars if under Cap) -->
+          <button id="inspector-add-one-btn" onclick="addOrBuyAnotherOfSelected()" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold btn-3d">
+            ➕ +1 More
+          </button>
+
+          <!-- Store Back to Owned Inventory -->
+          <button onclick="deleteSelectedPiece()" class="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold btn-3d" title="Store Piece Back in Owned Inventory">
+            📦 Store
+          </button>
+        </div>
+
+        <!-- THE INTERACTIVE SVG LIVING ROOM STAGE (1000 x 560 Coordinate System) -->
+        <svg id="fort-sandbox-svg" viewBox="0 0 1000 560" class="w-full h-full block touch-none">
+          <defs>
+            <!-- Fabric Patterns & Gradients -->
+            <pattern id="plaidPattern" width="24" height="24" patternUnits="userSpaceOnUse">
+              <rect width="24" height="24" fill="#9333ea" />
+              <rect width="24" height="8" fill="#db2777" opacity="0.55" />
+              <rect width="8" height="24" fill="#db2777" opacity="0.55" />
+              <line x1="0" y1="12" x2="24" y2="12" stroke="#fde047" stroke-width="1.5" opacity="0.6" />
+              <line x1="12" y1="0" x2="12" y2="24" stroke="#fde047" stroke-width="1.5" opacity="0.6" />
+            </pattern>
+
+            <pattern id="galaxyPattern" width="50" height="50" patternUnits="userSpaceOnUse">
+              <rect width="50" height="50" fill="#1e1b4b" />
+              <circle cx="10" cy="12" r="1.8" fill="#fde047" />
+              <circle cx="36" cy="20" r="1.2" fill="#38bdf8" />
+              <circle cx="24" cy="40" r="2.2" fill="#f472b6" />
+              <circle cx="44" cy="42" r="1.4" fill="#ffffff" />
+              <path d="M 14,28 L 16,23 L 18,28 L 23,30 L 18,32 L 16,37 L 14,32 L 9,30 Z" fill="#fde047" opacity="0.8" transform="scale(0.6) translate(10,10)" />
+            </pattern>
+
+            <!-- Warm Glow Halo for Lights & Lanterns -->
+            <radialGradient id="warmLightHalo" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(253, 224, 71, 0.75)" />
+              <stop offset="45%" stop-color="rgba(251, 191, 36, 0.32)" />
+              <stop offset="100%" stop-color="rgba(251, 191, 36, 0)" />
+            </radialGradient>
+
+            <linearGradient id="flashlightBeamGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stop-color="rgba(254, 240, 138, 0.75)" />
+              <stop offset="100%" stop-color="rgba(254, 240, 138, 0)" />
+            </linearGradient>
+
+            <filter id="softDropShadow" x="-15%" y="-15%" width="130%" height="135%">
+              <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#020617" flood-opacity="0.45" />
+            </filter>
+          </defs>
+
+          <!-- 1. STATIC LIVING ROOM ARCHITECTURE LAYER (Background Wall, Window, Bookshelf, Sofa Base, Rug) -->
+          <g id="room-background-layer" onclick="deselectFortPiece()"></g>
+
+          <!-- 2. DYNAMIC DRAGGABLE FORT PIECES LAYER -->
+          <g id="fort-pieces-layer"></g>
+
+          <!-- 3. NIGHT MODE AMBIENT LIGHTING OVERLAY (Pointer-events-none) -->
+          <g id="room-lighting-overlay" pointer-events="none"></g>
+        </svg>
+
+        <!-- Bottom-Left Quick Help Pill -->
+        <div class="absolute bottom-2.5 left-3 pointer-events-none bg-slate-900/85 backdrop-blur px-3 py-1 rounded-xl border border-slate-700 text-[11px] text-slate-200 hidden sm:block">
+          💡 <strong>Architect Tip:</strong> You start with <strong>2 Base Cushions & 1 Chair</strong>! Earn ⭐ Stars & 🔥 Streaks to buy more cushions, blankets, a Mini Trampoline, Slide, or Disco Ball!
+        </div>
+      </div>
+
+      <!-- CATEGORIZED INVENTORY DOCK (LIMITED STOCK, BUYABLE QUANTITIES, & STREAK VAULT) -->
+      <div class="bg-slate-900/95 border border-indigo-500/30 rounded-3xl p-3 sm:p-4 shadow-2xl">
+        <!-- Category Filter Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button id="cat-btn-cushions" onclick="setInventoryCategory('cushions')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-amber-400 text-slate-950 shadow">
+              🛋️ Cushions & Anchors (6)
+            </button>
+            <button id="cat-btn-blankets" onclick="setInventoryCategory('blankets')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:text-white">
+              ⛺ Blankets & Roofs (4)
+            </button>
+            <button id="cat-btn-pillows" onclick="setInventoryCategory('pillows')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:text-white">
+              🛌 Cozy Pillows (4)
+            </button>
+            <button id="cat-btn-streak" onclick="setInventoryCategory('streak')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-gradient-to-r from-rose-600/80 to-amber-500/80 text-white border border-amber-300/50 shadow">
+              🔥 Streak & Accuracy Vault (8)
+            </button>
+            <button id="cat-btn-props" onclick="setInventoryCategory('props')" class="px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:text-white">
+              🎨 Fun Fort Decor (6)
+            </button>
+          </div>
+
+          <div id="inventory-economy-note" class="text-xs font-bold text-amber-300">
+            🛒 Buy individual cushions & blankets up to your Fort Cap — storing an item returns it to your tray!
+          </div>
+        </div>
+
+        <!-- Horizontal / Grid Cards for Active Category -->
+        <div id="inventory-dock-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =====================================================================
+         TAB 3: OFFICIAL COMPLETION CERTIFICATE & PRESTIGE ITERATION UPGRADE
+         ===================================================================== -->
+    <section id="section-cert" class="hidden">
+      <div class="max-w-4xl mx-auto">
+
+        <!-- Progress Banner if not all 4 regions are mastered yet -->
+        <div id="cert-locked-banner" class="bg-slate-900/90 border-2 border-indigo-500/40 rounded-3xl p-6 text-center mb-6 shadow-2xl">
+          <div class="text-5xl mb-2">🔒🏆</div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Master All 4 Region Badges to Unlock the Grand Confetti Certificate!
+          </h2>
+          <p class="text-slate-300 max-w-xl mx-auto mb-5 text-sm">
+            Complete New England, Mid-Atlantic, Southeast Spotlight, and the All-18 Challenge in any order to earn your official Rivendell Fort Architect Certificate!
+          </p>
+          <div id="cert-badge-checklist" class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto mb-5"></div>
+          <button onclick="switchTopTab('quiz')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-heading font-bold text-sm sm:text-base shadow-lg btn-3d">
+            🗺️ Return to Map & Capitals Challenge
+          </button>
+        </div>
+
+        <!-- Official Completion Certificate -->
+        <div class="bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-100 text-slate-900 rounded-3xl p-4 sm:p-8 border-8 border-amber-400 shadow-2xl">
+          <div class="border-4 border-double border-amber-600/60 rounded-2xl p-5 sm:p-8 bg-white/85 text-center">
+            <div class="flex justify-center items-center gap-3 mb-2">
+              <span class="text-3xl">🏛️</span>
+              <span class="px-4 py-1 rounded-full bg-amber-500 text-slate-950 font-heading font-bold text-xs uppercase tracking-widest shadow">
+                Rivendell Memory Work Honor
+              </span>
+              <span class="text-3xl">⛺</span>
+            </div>
+
+            <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 mt-2 font-heading">
+              Master Fort Architect
+            </h2>
+            <p class="text-xs sm:text-sm font-bold text-amber-800 uppercase tracking-widest mt-1">
+              & East Coast States and Capitals Champion
+            </p>
+
+            <p class="text-slate-600 text-sm mt-4">This official certificate proudly recognizes that</p>
+
+            <div class="my-3 inline-block border-b-4 border-indigo-600 px-8 pb-1">
+              <span id="cert-student-name" class="text-3xl sm:text-5xl font-heading font-bold text-indigo-900">
+                Architect Explorer
+              </span>
+            </div>
+
+            <p class="text-slate-700 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed mt-2">
+              has demonstrated 100% mastery of all <strong>18 East Coast States, Capitals, and Map Locations</strong> for Mrs. Lambertus's class and designed an original Custom Living Room Fort!
+            </p>
+
+            <!-- Snapshot of Their Custom Fort -->
+            <div class="max-w-lg mx-auto my-5 rounded-2xl overflow-hidden border-4 border-amber-400 shadow-lg bg-slate-950 aspect-[16/9]">
+              <svg id="cert-fort-snapshot-svg" viewBox="0 0 1000 560" class="w-full h-full"></svg>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 border-t-2 border-amber-300 pt-4 mt-4 text-xs sm:text-sm font-bold text-slate-700">
+              <div>📅 Date: <span id="cert-date"></span></div>
+              <div>🛋️ Fort Pieces Placed: <span id="cert-piece-count">0</span></div>
+              <div>🎯 Accuracy: <span id="cert-accuracy-stat">100%</span></div>
+              <div>🏅 Build Iteration: <span id="cert-prestige-count">#1</span></div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <button onclick="triggerCelebrationFanfare()" class="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-heading font-bold text-sm sm:text-base shadow-lg btn-3d flex items-center gap-2">
+              <span>🎉</span> <span>Launch Confetti & Fanfare!</span>
+            </button>
+            <button onclick="startNewFortSeason()" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-heading font-bold text-sm sm:text-base shadow-lg btn-3d flex items-center gap-2">
+              <span>🚀</span> <span>Start Next Fort Iteration (+Star Multiplier, +Max Caps & Prestige Items!)</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       MODALS: NAME ENTRY, REGION COMPLETE, STREAK UNLOCK, & STUDY GUIDE
+       ===================================================================== -->
+  <div id="name-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center pop-in">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 mx-auto flex items-center justify-center text-4xl shadow-lg mb-3">
+        ⛺
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-1">Welcome, Fort Architect!</h2>
+      <p class="text-sm text-slate-300 mb-4">
+        Mrs. Lambertus's East Coast States & Capitals Challenge! Enter your first name for your Fort Studio and Completion Certificate:
+      </p>
+      <input
+        id="player-name-input"
+        type="text"
+        maxlength="22"
+        placeholder="Type your name (e.g., Campbell)"
+        class="w-full px-4 py-3 rounded-2xl bg-slate-800 border-2 border-indigo-400 text-white text-center font-heading font-bold text-lg focus:outline-none focus:border-amber-400 mb-4"
+      />
+      <button onclick="savePlayerName()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-heading font-bold text-lg shadow-lg btn-3d">
+        🚀 Start Playing & Building!
+      </button>
+    </div>
+  </div>
+
+  <!-- Region Mastered Celebration Modal -->
+  <div id="region-win-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-emerald-400 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center pop-in">
+      <div id="region-win-icon" class="text-6xl mb-2">🛡️</div>
+      <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-xs uppercase">
+        Region Mastered!
+      </span>
+      <h3 id="region-win-title" class="text-2xl sm:text-3xl font-bold text-white mt-2 mb-2">
+        Southeast Spotlight Complete!
+      </h3>
+      <p id="region-win-desc" class="text-slate-300 text-sm mb-5">
+        You mastered every state location and capital in this region and earned +50 Bonus ⭐ Fort Stars!
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="closeRegionWinModal('studio')" class="flex-1 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading font-bold text-sm shadow-lg btn-3d">
+          🏰 Go Build in Fort Studio
+        </button>
+        <button onclick="closeRegionWinModal('quiz')" class="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-heading font-bold text-sm shadow-lg btn-3d">
+          🗺️ Pick Another Region
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hot-Ticket Streak / Accuracy Reward Unlocked Modal -->
+  <div id="streak-unlock-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center pop-in">
+      <div id="streak-unlock-icon" class="text-6xl mb-2 animate-bounce">🪩</div>
+      <span id="streak-unlock-badge" class="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40 font-extrabold text-xs uppercase">
+        🔥 Hot-Ticket Streak Reward Unlocked!
+      </span>
+      <h3 id="streak-unlock-title" class="text-2xl font-bold text-white mt-2 mb-2">
+        Indoor Mini Trampoline Unlocked!
+      </h3>
+      <p id="streak-unlock-desc" class="text-slate-300 text-sm mb-5">
+        You hit 10 correct answers in a row and earned 1 free piece in your Fort Studio!
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="closeStreakUnlockModal(true)" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-heading font-bold text-sm shadow-lg btn-3d">
+          🏰 Try It in Fort Studio!
+        </button>
+        <button onclick="closeStreakUnlockModal(false)" class="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-heading font-bold text-sm shadow-lg btn-3d">
+          🔥 Keep Streak Going!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Study Sheet Modal -->
+  <div id="study-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-indigo-400 rounded-3xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl max-h-[88vh] flex flex-col pop-in">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-xl sm:text-2xl font-bold text-white">📖 Mrs. Lambertus's 18 States & Capitals Study Sheet</h3>
+          <p class="text-xs sm:text-sm text-slate-300">Memory tricks for all 18 East Coast states!</p>
+        </div>
+        <button onclick="closeStudyGuideModal()" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg">✕</button>
+      </div>
+      <div id="study-sheet-content" class="overflow-y-auto space-y-4 pr-1"></div>
+    </div>
+  </div>
+
+  <script>
+    /*************************************************************************
+     * 1. MRS. LAMBERTUS'S 18 EAST COAST STATES & CAPITALS DATASET
+     *************************************************************************/
+    const STATES_DATA = [
+      // REGION 1: NEW ENGLAND (6 Review States)
+      { id: 'ME', name: 'Maine', capital: 'Augusta', region: 1, isNew: false, labelX: 525, labelY: 108, smallCallout: false, hint: 'A lion with a big furry MAINE loves a gust of wind (AUGUSTA, Maine)!' },
+      { id: 'NH', name: 'New Hampshire', capital: 'Concord', region: 1, isNew: false, labelX: 468, labelY: 162, smallCallout: true, calloutNum: 2, hint: 'A cute hamster (New HAMPSHIRE) snacking on CONCORD grapes!' },
+      { id: 'VT', name: 'Vermont', capital: 'Montpelier', region: 1, isNew: false, labelX: 428, labelY: 142, smallCallout: true, calloutNum: 1, hint: 'Both have "MONT" (mountain) right inside: Ver-MONT and MONT-pelier!' },
+      { id: 'MA', name: 'Massachusetts', capital: 'Boston', region: 1, isNew: false, labelX: 452, labelY: 204, smallCallout: true, calloutNum: 3, hint: 'The BOSS of a ton of tea bags in BOSTON, Massachusetts!' },
+      { id: 'RI', name: 'Rhode Island', capital: 'Providence', region: 1, isNew: false, labelX: 488, labelY: 235, smallCallout: true, calloutNum: 4, hint: 'Little RHODE Island is watched over with care — PROVIDENCE, Rhode Island!' },
+      { id: 'CT', name: 'Connecticut', capital: 'Hartford', region: 1, isNew: false, labelX: 438, labelY: 238, smallCallout: true, calloutNum: 5, hint: 'CONNECT two HEARTS together in HARTFORD, Connecticut!' },
+
+      // REGION 2: MID-ATLANTIC (6 Review States)
+      { id: 'NY', name: 'New York', capital: 'Albany', region: 2, isNew: false, labelX: 345, labelY: 205, smallCallout: false, hint: 'ALL bunnies (ALBANY) love visiting big NEW YORK!' },
+      { id: 'PA', name: 'Pennsylvania', capital: 'Harrisburg', region: 2, isNew: false, labelX: 300, labelY: 292, smallCallout: false, hint: 'Draw a burger (HARRISBURG) with a PENCIL (PENNSYLVANIA)!' },
+      { id: 'NJ', name: 'New Jersey', capital: 'Trenton', region: 2, isNew: false, labelX: 390, labelY: 300, smallCallout: true, calloutNum: 6, hint: 'Wear a brand NEW JERSEY inside a giant tent (TRENTON)!' },
+      { id: 'DE', name: 'Delaware', capital: 'Dover', region: 2, isNew: false, labelX: 378, labelY: 360, smallCallout: true, calloutNum: 7, hint: 'Both start with D! A white dove flying OVER (DOVER, DELAWARE)!' },
+      { id: 'MD', name: 'Maryland', capital: 'Annapolis', region: 2, isNew: false, labelX: 318, labelY: 342, smallCallout: true, calloutNum: 8, hint: 'MARY picked AN APPLE (ANNAPOLIS) in MARYLAND!' },
+      { id: 'VA', name: 'Virginia', capital: 'Richmond', region: 2, isNew: false, labelX: 318, labelY: 416, smallCallout: false, hint: 'A very RICH man (RICHMOND) lives in VIRGINIA!' },
+
+      // REGION 3: SOUTHEAST SPOTLIGHT (6 New States This Week!)
+      { id: 'WV', name: 'West Virginia', capital: 'Charleston', region: 3, isNew: true, labelX: 242, labelY: 382, smallCallout: false, hint: 'Picture doing the CHARLESTON dance on top of the WEST VIRGINIA mountains!' },
+      { id: 'NC', name: 'North Carolina', capital: 'Raleigh', region: 3, isNew: true, labelX: 308, labelY: 468, smallCallout: false, hint: 'Hold a giant soccer RALLY (RALEIGH) in NORTH CAROLINA!' },
+      { id: 'SC', name: 'South Carolina', capital: 'Columbia', region: 3, isNew: true, labelX: 292, labelY: 530, smallCallout: false, hint: 'Christopher COLUMBUS (COLUMBIA) sailing into SOUTH CAROLINA!' },
+      { id: 'GA', name: 'Georgia', capital: 'Atlanta', region: 3, isNew: true, labelX: 232, labelY: 558, smallCallout: false, hint: 'Home sweet home right near the Atlantic — ATLANTA, GEORGIA!' },
+      { id: 'FL', name: 'Florida', capital: 'Tallahassee', region: 3, isNew: true, labelX: 278, labelY: 652, smallCallout: false, hint: 'Drink a TALL glass of orange juice in sunny FLORIDA (TALL-ahassee)!' },
+      { id: 'AL', name: 'Alabama', capital: 'Montgomery', region: 3, isNew: true, labelX: 152, labelY: 558, smallCallout: false, hint: 'Climb a mountain (MOUNT-gomery) right next door in ALABAMA!' }
+    ];
+
+    const REGIONS_META = [
+      { id: 3, title: 'Southeast Spotlight', subtitle: "This Week's 6 New States!", badgeText: 'NEW!', icon: '🍑', stateIds: ['WV', 'NC', 'SC', 'GA', 'FL', 'AL'], accent: 'from-rose-500 to-amber-500' },
+      { id: 1, title: 'New England Review', subtitle: '6 Northeast Review States', badgeText: 'REVIEW', icon: '🌲', stateIds: ['ME', 'NH', 'VT', 'MA', 'RI', 'CT'], accent: 'from-sky-500 to-indigo-500' },
+      { id: 2, title: 'Mid-Atlantic Review', subtitle: '6 Mid-Atlantic Review States', badgeText: 'REVIEW', icon: '🔔', stateIds: ['NY', 'PA', 'NJ', 'DE', 'MD', 'VA'], accent: 'from-indigo-500 to-purple-500' },
+      { id: 4, title: 'All 18 Challenge', subtitle: 'Full East Coast Mix', badgeText: 'BOSS', icon: '🏆', stateIds: STATES_DATA.map(s => s.id), accent: 'from-amber-400 to-orange-500' }
+    ];
+
+    /*************************************************************************
+     * 2. 28 MODULAR FORT ITEMS WITH QUANTITY CAPS & STREAK/ACCURACY GATES
+     *************************************************************************/
+    const FABRIC_PALETTES = [
+      { name: 'Royal Blue', fill: '#3b82f6', stroke: '#1d4ed8', accent: '#93c5fd' },
+      { name: 'Emerald Green', fill: '#10b981', stroke: '#047857', accent: '#6ee7b7' },
+      { name: 'Sunset Coral', fill: '#f43f5e', stroke: '#be123c', accent: '#fda4af' },
+      { name: 'Mustard Gold', fill: '#f59e0b', stroke: '#b45309', accent: '#fde047' },
+      { name: 'Cozy Plaid', fill: 'url(#plaidPattern)', stroke: '#7e22ce', accent: '#f472b6' },
+      { name: 'Starry Galaxy', fill: 'url(#galaxyPattern)', stroke: '#312e81', accent: '#fde047' }
+    ];
+
+    const MODULAR_CATALOG = [
+      // Category 1: Structural Cushions & Anchors (6) — Scarcity & Buyable Individual Stock!
+      { id: 'cush_square', cat: 'cushions', name: 'Square Base Cushion', cost: 15, maxCap: 8, starterQty: 2, icon: '🟦', defaultColor: 0, desc: 'Sturdy sofa cushion for stacking fort walls! (Start with 2, buy up to 8)' },
+      { id: 'cush_lean', cat: 'cushions', name: 'Angled Roof Cushion', cost: 18, maxCap: 6, starterQty: 0, icon: '📐', defaultColor: 2, desc: 'Long cushion great for leaning A-frame fort roofs!' },
+      { id: 'cush_pillar', cat: 'cushions', name: 'Tall Pillar Cushion', cost: 20, maxCap: 6, starterQty: 0, icon: '▮', defaultColor: 1, desc: 'Tall vertical column cushion to hold up high ceilings!' },
+      { id: 'supp_chair', cat: 'cushions', name: 'Dining Chair Anchor', cost: 22, maxCap: 4, starterQty: 1, icon: '🪑', defaultColor: 3, desc: 'Wooden chair for clipping blanket sheets! (Start with 1, buy up to 4)' },
+      { id: 'supp_books', cat: 'cushions', name: 'Heavy Book Stack', cost: 14, maxCap: 6, starterQty: 0, icon: '📚', defaultColor: 0, desc: 'Stack of adventure books to anchor blanket corners!' },
+      { id: 'supp_box', cat: 'cushions', name: 'Cardboard Castle Box', cost: 28, maxCap: 4, starterQty: 0, icon: '🏰', defaultColor: 3, desc: 'Crenellated cardboard turret box with a lookout window!' },
+
+      // Category 2: Blankets, Drapes & Roofs (4)
+      { id: 'blanket_canopy', cat: 'blankets', name: 'Draped Canopy Roof', cost: 25, maxCap: 4, starterQty: 0, icon: '⛺', defaultColor: 4, desc: 'Wide arched tent blanket with golden tassels!' },
+      { id: 'blanket_slope', cat: 'blankets', name: 'Angled Side Sheet', cost: 20, maxCap: 4, starterQty: 0, icon: '🪁', defaultColor: 0, desc: 'Stretched diagonal sheet that clips from couch to chair!' },
+      { id: 'blanket_tunnel', cat: 'blankets', name: 'Secret Tunnel Arch', cost: 35, maxCap: 2, starterQty: 0, icon: '🕳️', defaultColor: 5, desc: 'Cozy entrance cave arch into the center of your fort!' },
+      { id: 'blanket_mat', cat: 'blankets', name: 'Quilted Floor Mat', cost: 18, maxCap: 4, starterQty: 0, icon: '🧶', defaultColor: 1, desc: 'Soft stitched quilt mat for the floor of your fort!' },
+
+      // Category 3: Cozy Pillows (4)
+      { id: 'pillow_throw', cat: 'pillows', name: 'Fluffy Throw Pillow', cost: 12, maxCap: 6, starterQty: 0, icon: '🛌', defaultColor: 3, desc: 'Plump tasseled throw pillow for fort lounging!' },
+      { id: 'pillow_pouf', cat: 'pillows', name: 'Round Velvet Pouf', cost: 18, maxCap: 4, starterQty: 0, icon: '🟣', defaultColor: 2, desc: 'Tufted circular floor cushion seat!' },
+      { id: 'pillow_star', cat: 'pillows', name: 'Star Plush Pillow', cost: 22, maxCap: 4, starterQty: 0, icon: '⭐', defaultColor: 3, desc: 'Smiling golden star plushie pillow!' },
+      { id: 'pillow_bolster', cat: 'pillows', name: 'Long Bolster Roll', cost: 16, maxCap: 4, starterQty: 0, icon: '🌭', defaultColor: 0, desc: 'Cylindrical roll pillow for fort doorways!' },
+
+      // Category 4: 🔥 STREAK & ACCURACY VAULT ("Hot-Ticket" Interactive Rewards!) (8)
+      { id: 'light_fairy', cat: 'streak', name: 'Twinkling String Lights', cost: 25, maxCap: 4, starterQty: 0, streakReq: 5, tierLabel: '🔥 5-Streak Reward', icon: '✨', defaultColor: 3, desc: 'Unlocks at 5 Correct in a Row (+1 Free Strand)! Glows warmly in Night Mode!' },
+      { id: 'light_flash', cat: 'streak', name: 'Secret Agent Spotlight', cost: 25, maxCap: 3, starterQty: 0, streakReq: 5, tierLabel: '🔥 5-Streak Reward', icon: '🔦', defaultColor: 0, desc: 'Unlocks at 5 Correct in a Row! Projects a bright beam you can tilt & aim!' },
+      { id: 'toy_trampoline', cat: 'streak', name: 'Indoor Mini Trampoline', cost: 45, maxCap: 2, starterQty: 0, streakReq: 10, tierLabel: '🔥🔥 10-Streak Hot Ticket', isInteractiveToy: true, icon: '👟', defaultColor: 0, desc: 'Unlocks at 10 in a Row (+1 Free)! Tap it in the room for a springy BOING bounce!' },
+      { id: 'toy_slide', cat: 'streak', name: 'Turbo Cushion Slide', cost: 55, maxCap: 2, starterQty: 0, streakReq: 15, tierLabel: '🔥🔥🔥 15-Streak Hot Ticket', isInteractiveToy: true, icon: '🛝', defaultColor: 2, desc: 'Unlocks at 15 in a Row (+1 Free)! Attach to your sofa or cushions & tap to whoosh!' },
+      { id: 'toy_disco', cat: 'streak', name: 'Spinning Party Disco Ball', cost: 70, maxCap: 1, starterQty: 0, streakReq: 20, tierLabel: '⚡ 20-Streak Mega Reward', isInteractiveToy: true, icon: '🪩', defaultColor: 5, desc: 'Unlocks at 20 in a Row (+1 Free)! Casts spinning rainbow party rays across the room!' },
+      { id: 'toy_popcorn', cat: 'streak', name: 'Deluxe Popcorn & Smoothie Cart', cost: 45, maxCap: 2, starterQty: 0, accuracyReq: 90, tierLabel: '🎯 90%+ Accuracy Reward', isInteractiveToy: true, icon: '🍿', defaultColor: 2, desc: 'Complete any region with 90%+ accuracy! Tap to pop fresh golden popcorn!' },
+      { id: 'toy_projector', cat: 'streak', name: 'Galaxy Nebula Projector', cost: 60, maxCap: 1, starterQty: 0, accuracyReq: 92, prestigeOrAcc: true, tierLabel: '🎯 92%+ Acc OR Iteration #2', isInteractiveToy: true, icon: '🚀', defaultColor: 5, desc: 'Projects swirling stars & constellations onto your fort ceiling!' },
+      { id: 'toy_throne', cat: 'streak', name: 'Sovereign Velvet Throne', cost: 75, maxCap: 1, starterQty: 0, prestigeReq: 2, tierLabel: '🏆 Iteration #2+ Masterpiece', isInteractiveToy: true, icon: '👑', defaultColor: 3, desc: 'Unlocked on Fort Iteration #2+! Royal golden throne for the Master Architect!' },
+
+      // Category 5: Fun Fort Props & Decor (6)
+      { id: 'prop_sign', cat: 'props', name: 'Fort Architects Sign', cost: 15, maxCap: 2, starterQty: 0, icon: '🪧', defaultColor: 3, desc: 'Wooden clubhouse sign featuring your custom name!' },
+      { id: 'light_lantern', cat: 'props', name: 'Cozy Camping Lantern', cost: 24, maxCap: 3, starterQty: 0, icon: '🏮', defaultColor: 3, desc: 'Radiates a warm golden halo inside your fort!' },
+      { id: 'prop_easel', cat: 'props', name: 'Art Easel & Canvas', cost: 30, maxCap: 2, starterQty: 0, icon: '🎨', defaultColor: 2, desc: 'Wooden tripod easel with a colorful landscape painting!' },
+      { id: 'prop_soccer', cat: 'props', name: 'Championship Soccer Ball', cost: 20, maxCap: 3, starterQty: 0, icon: '⚽', defaultColor: 0, desc: 'Classic hexagon soccer ball ready for kickoff!' },
+      { id: 'prop_snacks', cat: 'props', name: 'Cookies & Hot Cocoa Tray', cost: 25, maxCap: 3, starterQty: 0, icon: '🍪', defaultColor: 3, desc: 'Chocolate chip cookies & marshmallow cocoa mugs!' },
+      { id: 'prop_puppy', cat: 'props', name: 'Plush Guardian Puppy', cost: 35, maxCap: 2, starterQty: 0, icon: '🐶', defaultColor: 3, desc: 'Cuddly golden retriever plushie guarding the fort!' }
+    ];
+
+    /*************************************************************************
+     * 3. MINIMAL STARTER FORT LAYOUT (2 BASE CUSHIONS + 1 CHAIR ANCHOR)
+     *************************************************************************/
+    function getMinimalStarterOwnedCounts() {
+      const map = {};
+      MODULAR_CATALOG.forEach(item => {
+        map[item.id] = item.starterQty || 0;
+      });
+      return map;
+    }
+
+    function getDefaultStarterLayout() {
+      return [
+        { uid: 'start_chair_1', typeId: 'supp_chair', x: 340, y: 390, rot: 0, scale: 1.0, flip: 1, colorIdx: 3, z: 1 },
+        { uid: 'start_cush_1', typeId: 'cush_square', x: 485, y: 428, rot: 0, scale: 1.0, flip: 1, colorIdx: 0, z: 2 },
+        { uid: 'start_cush_2', typeId: 'cush_square', x: 640, y: 428, rot: 0, scale: 1.0, flip: 1, colorIdx: 2, z: 3 }
+      ];
+    }
+
+    /*************************************************************************
+     * 4. PERSISTENT STATE & INITIALIZATION
+     *************************************************************************/
+    const STORAGE_KEY = 'rivendell_fort_architects_v3';
+
+    let state = {
+      playerName: 'Architect',
+      hasSetName: false,
+      stars: 25,
+      streak: 0,
+      bestStreak: 0,
+      totalAnswered: 0,
+      totalCorrect: 0,
+      bestRegionAccuracy: 0,
+      prestigeCount: 1,
+      nightMode: true,
+      ownedCounts: getMinimalStarterOwnedCounts(),
+      unlockedVaultIds: [],
+      placedPieces: getDefaultStarterLayout(),
+      progress: { 1: {}, 2: {}, 3: {}, 4: {} },
+      regionStats: { 1: { ans: 0, cor: 0 }, 2: { ans: 0, cor: 0 }, 3: { ans: 0, cor: 0 }, 4: { ans: 0, cor: 0 } },
+      badgesEarned: { 1: false, 2: false, 3: false, 4: false }
+    };
+
+    let activeTopTab = 'quiz';
+    let currentRegionId = 3;
+    let playSubMode = 'mix';
+    let activeQuestion = null;
+    let awaitingNextQuestion = false;
+
+    let currentInventoryCat = 'cushions';
+    let selectedPieceUid = null;
+    let dragState = null;
+
+    function getEffectiveMaxCap(item) {
+      const bonusCap = (state.prestigeCount - 1) * 2;
+      if (item.cat === 'cushions' || item.cat === 'blankets' || item.cat === 'pillows') {
+        return item.maxCap + bonusCap;
+      }
+      return item.maxCap + Math.floor((state.prestigeCount - 1));
+    }
+
+    function getStarMultiplier() {
+      if (state.prestigeCount >= 3) return 2.0;
+      if (state.prestigeCount === 2) return 1.5;
+      return 1.0;
+    }
+
+    function getOverallAccuracyPercent() {
+      if (!state.totalAnswered || state.totalAnswered === 0) return 100;
+      return Math.round((state.totalCorrect / state.totalAnswered) * 100);
+    }
+
+    function isItemBlueprintUnlocked(item) {
+      if (item.cat !== 'streak') return true;
+      if (state.unlockedVaultIds.includes(item.id)) return true;
+      if (item.streakReq && state.bestStreak >= item.streakReq) return true;
+      if (item.accuracyReq && state.bestRegionAccuracy >= item.accuracyReq) return true;
+      if (item.prestigeOrAcc && (state.prestigeCount >= 2 || state.bestRegionAccuracy >= item.accuracyReq)) return true;
+      if (item.prestigeReq && state.prestigeCount >= item.prestigeReq) return true;
+      return false;
+    }
+
+    function ensureProgressStructure() {
+      REGIONS_META.forEach(reg => {
+        if (!state.progress[reg.id]) state.progress[reg.id] = {};
+        if (!state.regionStats) state.regionStats = {};
+        if (!state.regionStats[reg.id]) state.regionStats[reg.id] = { ans: 0, cor: 0 };
+        reg.stateIds.forEach(sid => {
+          if (!state.progress[reg.id][sid]) {
+            state.progress[reg.id][sid] = { map: false, capital: false };
+          }
+        });
+      });
+
+      if (!state.ownedCounts) {
+        state.ownedCounts = getMinimalStarterOwnedCounts();
+      }
+      MODULAR_CATALOG.forEach(item => {
+        if (typeof state.ownedCounts[item.id] !== 'number') {
+          state.ownedCounts[item.id] = item.starterQty || 0;
+        }
+      });
+
+      const countsPlaced = {};
+      state.placedPieces = (state.placedPieces || []).filter(p => {
+        const catItem = MODULAR_CATALOG.find(i => i.id === p.typeId);
+        if (!catItem) return false;
+        countsPlaced[p.typeId] = (countsPlaced[p.typeId] || 0) + 1;
+        return countsPlaced[p.typeId] <= (state.ownedCounts[p.typeId] || 0);
+      });
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = { ...state, ...parsed };
+        }
+      } catch (e) {
+        console.warn('localStorage read error', e);
+      }
+      ensureProgressStructure();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('localStorage save error', e);
+      }
+    }
+
+    /*************************************************************************
+     * 5. TRUE FISHER-YATES SHUFFLE
+     *************************************************************************/
+    function fisherYatesShuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = temp;
+      }
+      return copy;
+    }
+
+    /*************************************************************************
+     * 6. WEB AUDIO API SOUND EFFECTS (WITH BOING, SLIDE & DISCO SOUNDS!)
+     *************************************************************************/
+    let audioCtx = null;
+    let isMuted = false;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      document.getElementById('sound-toggle-btn').textContent = isMuted ? '🔇' : '🔊';
+      if (!isMuted) playSound('tap');
+    }
+
+    function playSound(type) {
+      if (isMuted) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      if (type === 'tap') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(690, now + 0.055);
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+      } else if (type === 'plop') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(190, now);
+        osc.frequency.exponentialRampToValueAtTime(340, now + 0.09);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.11);
+      } else if (type === 'boing') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(580, now + 0.18);
+        osc.frequency.exponentialRampToValueAtTime(240, now + 0.34);
+        osc.frequency.exponentialRampToValueAtTime(480, now + 0.48);
+        gain.gain.setValueAtTime(0.26, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.54);
+      } else if (type === 'slide') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.32);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.45);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (type === 'correct') {
+        const boost = Math.min(state.streak, 12) * 18;
+        const notes = [523.25 + boost, 659.25 + boost, 783.99 + boost, 1046.5 + boost];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.18, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.22);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.23);
+        });
+      } else if (type === 'wrong') {
+        [250, 205].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+          gain.gain.setValueAtTime(0.15, now + idx * 0.11);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.11);
+          osc.stop(now + idx * 0.11 + 0.19);
+        });
+      } else if (type === 'unlock') {
+        [587.33, 783.99, 987.77, 1174.66, 1567.98].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+          gain.gain.setValueAtTime(0.16, now + idx * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.22);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.05);
+          osc.stop(now + idx * 0.05 + 0.23);
+        });
+      } else if (type === 'fanfare') {
+        const chord = [
+          { f: 523.25, t: 0, d: 0.13 },
+          { f: 523.25, t: 0.14, d: 0.13 },
+          { f: 523.25, t: 0.28, d: 0.13 },
+          { f: 659.25, t: 0.42, d: 0.30 },
+          { f: 587.33, t: 0.75, d: 0.20 },
+          { f: 659.25, t: 0.98, d: 0.20 },
+          { f: 783.99, t: 1.20, d: 0.55 },
+          { f: 1046.5, t: 1.22, d: 0.55 }
+        ];
+        chord.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.f, now + n.t);
+          gain.gain.setValueAtTime(0.2, now + n.t);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + n.t);
+          osc.stop(now + n.t + n.d + 0.02);
+        });
+      }
+    }
+
+    /*************************************************************************
+     * 7. TOP TAB NAVIGATION, STREAK TRACKER & HEADER SYNC
+     *************************************************************************/
+    function getTotalOwnedPiecesCount() {
+      return Object.values(state.ownedCounts || {}).reduce((acc, v) => acc + (v || 0), 0);
+    }
+
+    function updateHeaderUI() {
+      document.getElementById('header-player-name').textContent = state.playerName || 'Explorer';
+      document.getElementById('studio-owner-name').textContent = state.playerName || 'Architect';
+      document.getElementById('star-count-display').textContent = state.stars;
+      document.getElementById('bridge-star-count').textContent = `${state.stars} ⭐`;
+      document.getElementById('streak-count-display').textContent = state.streak;
+      document.getElementById('best-streak-pill').textContent = `/ ⚡${state.bestStreak || 0}`;
+      document.getElementById('accuracy-count-display').textContent = `${getOverallAccuracyPercent()}%`;
+
+      const mult = getStarMultiplier();
+      const multPill = document.getElementById('multiplier-pill');
+      if (mult > 1) {
+        multPill.textContent = `${mult}x`;
+        multPill.classList.remove('hidden');
+      } else {
+        multPill.classList.add('hidden');
+      }
+
+      document.getElementById('studio-iteration-badge').textContent =
+        `Build Iteration #${state.prestigeCount}${mult > 1 ? ` (${mult}x Stars!)` : ''}`;
+
+      const totalOwned = getTotalOwnedPiecesCount();
+      const totalPlaced = state.placedPieces.length;
+      document.getElementById('studio-Piece-count-pill').textContent = `${totalPlaced}/${totalOwned}`;
+      document.getElementById('bridge-pieces-placed').textContent =
+        `${totalPlaced} in Fort / ${totalOwned} Owned Pieces`;
+
+      const earnedCount = Object.values(state.badgesEarned).filter(Boolean).length;
+      document.getElementById('badge-count-display').textContent = `${earnedCount}/4`;
+
+      updateStreakVaultProgressUI();
+
+      const canBuySomething = MODULAR_CATALOG.some(it => {
+        const owned = state.ownedCounts[it.id] || 0;
+        const cap = getEffectiveMaxCap(it);
+        return isItemBlueprintUnlocked(it) && owned < cap && state.stars >= it.cost;
+      });
+      const pingEl = document.getElementById('fort-afford-ping');
+      if (canBuySomething) pingEl.classList.remove('hidden');
+      else pingEl.classList.add('hidden');
+    }
+
+    function updateStreakVaultProgressUI() {
+      const s = state.streak;
+      const best = state.bestStreak || 0;
+      const goalTextEl = document.getElementById('next-streak-goal-text');
+      const badgeEl = document.getElementById('streak-milestone-badge');
+
+      if (s < 5) {
+        goalTextEl.textContent = `Next Unlock at 5🔥 in a row: ✨ String Lights & 🔦 Spotlight!`;
+        badgeEl.textContent = `${s} / 5 🔥`;
+      } else if (s < 10) {
+        goalTextEl.textContent = `Next Unlock at 10🔥 in a row: 👟 Bouncing Mini Trampoline!`;
+        badgeEl.textContent = `${s} / 10 🔥`;
+      } else if (s < 15) {
+        goalTextEl.textContent = `Next Unlock at 15🔥 in a row: 🛝 Turbo Cushion Slide!`;
+        badgeEl.textContent = `${s} / 15 🔥`;
+      } else if (s < 20) {
+        goalTextEl.textContent = `Next Unlock at 20🔥 in a row: 🪩 Spinning Party Disco Ball!`;
+        badgeEl.textContent = `${s} / 20 🔥`;
+      } else {
+        goalTextEl.textContent = `⚡ All 4 Streak Tiers Unlocked! Keep going for bonus Stars!`;
+        badgeEl.textContent = `${s} 🔥 MAX!`;
+      }
+
+      [
+        { t: 5, id: 'tier-pill-5' },
+        { t: 10, id: 'tier-pill-10' },
+        { t: 15, id: 'tier-pill-15' },
+        { t: 20, id: 'tier-pill-20' }
+      ].forEach(tier => {
+        const el = document.getElementById(tier.id);
+        if (!el) return;
+        const unlocked = best >= tier.t;
+        el.className = unlocked
+          ? 'p-1.5 rounded-xl bg-emerald-950/80 border-2 border-emerald-400 text-[10px] font-extrabold text-emerald-200 shadow'
+          : 'p-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-slate-400';
+      });
+    }
+
+    function switchTopTab(tab) {
+      playSound('tap');
+      activeTopTab = tab;
+
+      const tabs = [
+        { id: 'quiz', sec: 'section-quiz', btn: 'main-tab-quiz' },
+        { id: 'studio', sec: 'section-studio', btn: 'main-tab-studio' },
+        { id: 'cert', sec: 'section-cert', btn: 'main-tab-cert' }
+      ];
+
+      tabs.forEach(t => {
+        const secEl = document.getElementById(t.sec);
+        const btnEl = document.getElementById(t.btn);
+        if (t.id === tab) {
+          secEl.classList.remove('hidden');
+          btnEl.className = 'flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-md relative';
+        } else {
+          secEl.classList.add('hidden');
+          btnEl.className = 'flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 text-slate-300 hover:text-white relative';
+        }
+      });
+
+      if (tab === 'quiz') {
+        renderRegionSelectorBar();
+        renderMapVisualState();
+      } else if (tab === 'studio') {
+        renderFortSandbox();
+        renderInventoryDock();
+      } else if (tab === 'cert') {
+        renderCertificateView();
+      }
+      updateHeaderUI();
+    }
+
+    /*************************************************************************
+     * 8. GEOGRAPHY CHALLENGE ENGINE (4 REGIONS + FISHER-YATES SHUFFLE)
+     *************************************************************************/
+    function getRegionCompletionStats(regId) {
+      const reg = REGIONS_META.find(r => r.id === regId);
+      const prog = state.progress[regId] || {};
+      let done = 0;
+      const total = reg.stateIds.length * 2;
+      reg.stateIds.forEach(sid => {
+        if (prog[sid]?.map) done++;
+        if (prog[sid]?.capital) done++;
+      });
+      return {
+        done,
+        total,
+        percent: Math.round((done / total) * 100),
+        isComplete: done >= total
+      };
+    }
+
+    function getUniqueMasteredCount() {
+      let c = 0;
+      STATES_DATA.forEach(st => {
+        const pHome = state.progress[st.region]?.[st.id];
+        const pAll = state.progress[4]?.[st.id];
+        if ((pHome?.map && pHome?.capital) || (pAll?.map && pAll?.capital)) c++;
+      });
+      return c;
+    }
+
+    function renderRegionSelectorBar() {
+      document.getElementById('overall-mastery-banner').textContent =
+        `${getUniqueMasteredCount()} / 18 East Coast States Mastered`;
+
+      const grid = document.getElementById('region-selector-grid');
+      grid.innerHTML = '';
+
+      REGIONS_META.forEach(reg => {
+        const stats = getRegionCompletionStats(reg.id);
+        const isCurrent = reg.id === currentRegionId;
+        const isDone = state.badgesEarned[reg.id] || stats.isComplete;
+
+        const btn = document.createElement('button');
+        btn.className = `p-3 rounded-2xl border-2 text-left transition flex flex-col justify-between btn-3d ${
+          isCurrent
+            ? 'bg-indigo-950/90 border-amber-400 shadow-lg'
+            : isDone
+            ? 'bg-emerald-950/40 border-emerald-400/60 hover:border-emerald-300'
+            : 'bg-slate-800/80 border-slate-700 hover:border-indigo-400'
+        }`;
+        btn.onclick = () => selectRegion(reg.id);
+
+        btn.innerHTML = `
+          <div class="flex items-center justify-between gap-1 w-full mb-1">
+            <span class="font-heading font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+              <span>${reg.icon}</span> <span>${reg.title}</span>
+            </span>
+            <span class="px-2 py-0.2 rounded-full text-[10px] font-extrabold ${
+              isDone ? 'bg-emerald-400 text-slate-950' : reg.id === 3 ? 'bg-rose-500 text-white' : 'bg-slate-700 text-slate-200'
+            }">
+              ${isDone ? '✓ DONE' : reg.badgeText}
+            </span>
+          </div>
+          <div class="w-full flex items-center gap-2 mt-1">
+            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-700">
+              <div class="h-full bg-gradient-to-r ${reg.accent}" style="width: ${stats.percent}%"></div>
+            </div>
+            <span class="text-[11px] font-bold ${isDone ? 'text-emerald-300' : 'text-amber-300'}">${stats.done}/${stats.total}</span>
+          </div>
+        `;
+        grid.appendChild(btn);
+      });
+
+      const activeReg = REGIONS_META.find(r => r.id === currentRegionId);
+      document.getElementById('active-region-chip').textContent = `${activeReg.icon} ${activeReg.title} (${activeReg.subtitle})`;
+    }
+
+    function selectRegion(regId) {
+      playSound('tap');
+      currentRegionId = regId;
+      renderRegionSelectorBar();
+      generateNextQuestion();
+    }
+
+    function setPlaySubMode(mode) {
+      playSound('tap');
+      playSubMode = mode;
+      ['mix', 'map', 'capital'].forEach(m => {
+        const b = document.getElementById(`submode-${m}`);
+        if (m === mode) {
+          b.className = 'px-2.5 py-1 rounded-lg text-[11px] font-heading font-bold bg-indigo-600 text-white shadow';
+        } else {
+          b.className = 'px-2.5 py-1 rounded-lg text-[11px] font-heading font-bold text-slate-300 hover:text-white';
+        }
+      });
+      generateNextQuestion();
+    }
+
+    function renderMapVisualState() {
+      const reg = REGIONS_META.find(r => r.id === currentRegionId);
+      const prog = state.progress[currentRegionId] || {};
+      const labelsLayer = document.getElementById('svg-labels-layer');
+      labelsLayer.innerHTML = '';
+
+      STATES_DATA.forEach(st => {
+        const pathEl = document.getElementById(`state-${st.id}`);
+        if (!pathEl) return;
+
+        const inReg = reg.stateIds.includes(st.id);
+        const stProg = prog[st.id] || { map: false, capital: false };
+        const isMastered = stProg.map && stProg.capital;
+
+        pathEl.setAttribute('class', 'state-shape');
+        if (isMastered) {
+          pathEl.classList.add(`state-mastered-${st.region}`);
+        } else if (inReg) {
+          pathEl.classList.add('state-region-active');
+        } else {
+          pathEl.classList.add('state-unmastered');
+        }
+
+        if (activeQuestion && activeQuestion.task !== 'map' && activeQuestion.stateObj.id === st.id) {
+          pathEl.classList.add('state-highlight-target');
+        }
+
+        if (st.smallCallout) {
+          const rectEl = document.getElementById(`callout-${st.id}`);
+          const lblEl = document.getElementById(`callout-label-${st.id}`);
+          if (rectEl && lblEl) {
+            if (activeQuestion && activeQuestion.task === 'map') {
+              lblEl.textContent = `Coast State #${st.calloutNum}`;
+            } else {
+              lblEl.textContent = isMastered ? `★ ${st.id}` : `Box #${st.calloutNum} (${st.id})`;
+            }
+            rectEl.setAttribute('stroke', isMastered ? '#34d399' : inReg ? '#60a5fa' : '#475569');
+          }
+        }
+
+        if (isMastered) {
+          const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          txt.setAttribute('x', st.labelX);
+          txt.setAttribute('y', st.labelY);
+          txt.setAttribute('text-anchor', 'middle');
+          txt.setAttribute('fill', '#0f172a');
+          txt.setAttribute('font-size', '12');
+          txt.setAttribute('font-weight', '900');
+          txt.textContent = `★${st.id}`;
+          labelsLayer.appendChild(txt);
+        } else if (st.smallCallout) {
+          const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          txt.setAttribute('x', st.labelX);
+          txt.setAttribute('y', st.labelY);
+          txt.setAttribute('text-anchor', 'middle');
+          txt.setAttribute('fill', '#0f172a');
+          txt.setAttribute('font-size', '11');
+          txt.setAttribute('font-weight', '900');
+          txt.textContent = `#${st.calloutNum}`;
+          labelsLayer.appendChild(txt);
+        }
+      });
+    }
+
+    function generateNextQuestion() {
+      awaitingNextQuestion = false;
+      document.getElementById('feedback-box').classList.add('hidden');
+
+      const reg = REGIONS_META.find(r => r.id === currentRegionId);
+      const prog = state.progress[currentRegionId];
+
+      let pool = [];
+      reg.stateIds.forEach(sid => {
+        const stObj = STATES_DATA.find(s => s.id === sid);
+        const stProg = prog[sid] || { map: false, capital: false };
+        const weight = (currentRegionId === 4 && stObj.isNew) ? 2 : 1;
+
+        for (let w = 0; w < weight; w++) {
+          if (playSubMode === 'map') {
+            if (!stProg.map) pool.push({ stateObj: stObj, task: 'map' });
+          } else if (playSubMode === 'capital') {
+            if (!stProg.capital) pool.push({ stateObj: stObj, task: 'capital' });
+          } else {
+            if (!stProg.map) pool.push({ stateObj: stObj, task: 'map' });
+            if (!stProg.capital) pool.push({ stateObj: stObj, task: 'capital' });
+          }
+        }
+      });
+
+      if (pool.length === 0) {
+        reg.stateIds.forEach(sid => {
+          const stObj = STATES_DATA.find(s => s.id === sid);
+          const stProg = prog[sid] || { map: false, capital: false };
+          if (!stProg.map) pool.push({ stateObj: stObj, task: 'map' });
+          if (!stProg.capital) pool.push({ stateObj: stObj, task: 'capital' });
+        });
+      }
+
+      if (pool.length === 0) {
+        reg.stateIds.forEach(sid => {
+          const stObj = STATES_DATA.find(s => s.id === sid);
+          if (playSubMode === 'map') pool.push({ stateObj: stObj, task: 'map' });
+          else if (playSubMode === 'capital') pool.push({ stateObj: stObj, task: 'capital' });
+          else pool.push({ stateObj: stObj, task: Math.random() < 0.45 ? 'map' : 'capital' });
+        });
+      }
+
+      const shuffled = fisherYatesShuffle(pool);
+      let picked = shuffled[0];
+      if (shuffled.length > 1 && activeQuestion && picked.stateObj.id === activeQuestion.stateObj.id && picked.task === activeQuestion.task) {
+        picked = shuffled[1];
+      }
+
+      let variant = picked.task;
+      if (picked.task === 'capital') {
+        variant = Math.random() < 0.7 ? 'state_to_capital' : 'capital_to_state';
+      }
+
+      let choices = [];
+      if (variant === 'state_to_capital') {
+        const correctCap = picked.stateObj.capital;
+        const distractors = fisherYatesShuffle(
+          STATES_DATA.filter(s => s.id !== picked.stateObj.id).map(s => s.capital)
+        ).slice(0, 3);
+        choices = fisherYatesShuffle([
+          { label: correctCap, isCorrect: true },
+          ...distractors.map(d => ({ label: d, isCorrect: false }))
+        ]);
+      } else if (variant === 'capital_to_state') {
+        const correctState = picked.stateObj.name;
+        const distractors = fisherYatesShuffle(
+          STATES_DATA.filter(s => s.id !== picked.stateObj.id).map(s => s.name)
+        ).slice(0, 3);
+        choices = fisherYatesShuffle([
+          { label: correctState, isCorrect: true },
+          ...distractors.map(d => ({ label: d, isCorrect: false }))
+        ]);
+      }
+
+      activeQuestion = {
+        stateObj: picked.stateObj,
+        task: picked.task,
+        variant,
+        choices
+      };
+
+      renderQuestionCardUI();
+      renderMapVisualState();
+    }
+
+    function renderQuestionCardUI() {
+      const q = activeQuestion;
+      const stProg = state.progress[currentRegionId]?.[q.stateObj.id] || { map: false, capital: false };
+      const steps = (stProg.map ? 1 : 0) + (stProg.capital ? 1 : 0);
+
+      document.getElementById('question-state-status').textContent =
+        `${q.stateObj.isNew ? '🌟 NEW THIS WEEK • ' : ''}State Mastery: ${steps} / 2`;
+
+      const badgeEl = document.getElementById('question-mode-badge');
+      const subEl = document.getElementById('question-subtitle');
+      const promptEl = document.getElementById('question-prompt');
+      const helperEl = document.getElementById('map-mode-helper');
+      const gridEl = document.getElementById('choices-grid');
+
+      if (q.task === 'map') {
+        badgeEl.textContent = '🗺️ Find on Map';
+        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/40';
+        subEl.textContent = `Clue: Its capital city is ${q.stateObj.capital}!`;
+        promptEl.innerHTML = `Where is <span class="text-amber-300 underline">${q.stateObj.name}</span> on the East Coast Map?`;
+        document.getElementById('map-target-name-span').textContent = q.stateObj.name;
+        helperEl.classList.remove('hidden');
+        gridEl.classList.add('hidden');
+      } else {
+        badgeEl.textContent = '🏛️ Capital Architect';
+        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40';
+        helperEl.classList.add('hidden');
+        gridEl.classList.remove('hidden');
+
+        if (q.variant === 'state_to_capital') {
+          subEl.textContent = 'Look at the glowing state pulsing on the map!';
+          promptEl.innerHTML = `What is the capital of <span class="text-amber-300">${q.stateObj.name}</span>?`;
+        } else {
+          subEl.textContent = 'Look at the glowing state pulsing on the map!';
+          promptEl.innerHTML = `<span class="text-amber-300">${q.stateObj.capital}</span> is the capital of which state?`;
+        }
+
+        gridEl.innerHTML = '';
+        const letters = ['A', 'B', 'C', 'D'];
+        q.choices.forEach((choice, idx) => {
+          const btn = document.createElement('button');
+          btn.className = 'w-full p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border-2 border-indigo-400/40 text-left font-heading font-bold text-base sm:text-lg text-white shadow-lg flex items-center gap-3 btn-3d transition';
+          btn.innerHTML = `
+            <span class="w-8 h-8 rounded-xl bg-indigo-500/30 border border-indigo-400/50 flex items-center justify-center text-sm font-extrabold text-indigo-200 shrink-0">
+              ${letters[idx]}
+            </span>
+            <span class="leading-tight">${choice.label}</span>
+          `;
+          btn.onclick = () => handleMultipleChoiceAnswer(choice, btn);
+          gridEl.appendChild(btn);
+        });
+      }
+    }
+
+    function handleMultipleChoiceAnswer(choice, btnEl) {
+      if (awaitingNextQuestion || !activeQuestion) return;
+      if (choice.isCorrect) {
+        awaitingNextQuestion = true;
+        btnEl.className = 'w-full p-4 rounded-2xl bg-emerald-500 border-2 border-emerald-200 text-left font-heading font-bold text-base sm:text-lg text-slate-950 shadow-xl flex items-center gap-3 scale-[1.02] transition';
+        recordCorrectAnswer();
+      } else {
+        btnEl.className = 'w-full p-4 rounded-2xl bg-rose-900/70 border-2 border-rose-400 text-left font-heading font-bold text-base sm:text-lg text-rose-200 flex items-center gap-3 shake-anim';
+        recordWrongAnswer(`Remember: ${activeQuestion.stateObj.hint}`);
+      }
+    }
+
+    function handleStateTap(tappedId) {
+      const tappedObj = STATES_DATA.find(s => s.id === tappedId);
+      if (!tappedObj) return;
+      const readout = document.getElementById('map-hover-readout');
+
+      if (activeQuestion && activeQuestion.task === 'map') {
+        if (awaitingNextQuestion) return;
+        if (tappedId === activeQuestion.stateObj.id) {
+          awaitingNextQuestion = true;
+          readout.textContent = `🎯 Correct! ${tappedObj.name} (${tappedObj.capital})!`;
+          recordCorrectAnswer();
+        } else {
+          readout.textContent = `That's ${tappedObj.name} — keep looking for ${activeQuestion.stateObj.name}!`;
+          const pathEl = document.getElementById(`state-${tappedId}`);
+          if (pathEl) {
+            pathEl.classList.add('shake-anim');
+            setTimeout(() => pathEl.classList.remove('shake-anim'), 450);
+          }
+          recordWrongAnswer(
+            `You tapped ${tappedObj.name}. Look ${
+              tappedObj.labelY < activeQuestion.stateObj.labelY ? 'further SOUTH ⬇️' : 'further NORTH ⬆️'
+            } for ${activeQuestion.stateObj.name}!`
+          );
+        }
+      } else {
+        playSound('tap');
+        if (activeQuestion && tappedId === activeQuestion.stateObj.id) {
+          readout.textContent = `✨ Mystery State — choose the correct button on the right!`;
+        } else {
+          readout.textContent = `📍 ${tappedObj.name} • Capital: ${tappedObj.capital}`;
+        }
+      }
+    }
+
+    function recordCorrectAnswer() {
+      state.streak++;
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+      state.totalAnswered = (state.totalAnswered || 0) + 1;
+      state.totalCorrect = (state.totalCorrect || 0) + 1;
+      if (!state.regionStats[currentRegionId]) state.regionStats[currentRegionId] = { ans: 0, cor: 0 };
+      state.regionStats[currentRegionId].ans++;
+      state.regionStats[currentRegionId].cor++;
+
+      const baseStars = 10 + Math.min(state.streak * 2, 12);
+      const earned = Math.round(baseStars * getStarMultiplier());
+      state.stars += earned;
+
+      playSound('correct');
+
+      const sid = activeQuestion.stateObj.id;
+      const key = activeQuestion.task;
+      if (!state.progress[currentRegionId][sid]) state.progress[currentRegionId][sid] = { map: false, capital: false };
+      state.progress[currentRegionId][sid][key] = true;
+
+      const homeReg = activeQuestion.stateObj.region;
+      if (!state.progress[homeReg][sid]) state.progress[homeReg][sid] = { map: false, capital: false };
+      state.progress[homeReg][sid][key] = true;
+
+      let newlyUnlockedStreakItem = checkAndAwardStreakMilestone(state.streak);
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'mt-4 p-3.5 rounded-2xl border-2 border-emerald-400 bg-emerald-950/90 text-emerald-200 text-sm font-bold pop-in';
+      fb.innerHTML = `
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-emerald-300 font-extrabold text-base">✅ Great job, ${state.playerName}! (${state.streak}🔥 Streak)</span>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold">+${earned} ⭐ Stars</span>
+        </div>
+        <div class="text-xs sm:text-sm text-white">
+          <strong>${activeQuestion.stateObj.capital}</strong> is the capital of <strong>${activeQuestion.stateObj.name}</strong>!
+        </div>
+      `;
+      fb.classList.remove('hidden');
+
+      const regStats = getRegionCompletionStats(currentRegionId);
+      const newlyCompleted = regStats.isComplete && !state.badgesEarned[currentRegionId];
+      if (newlyCompleted) {
+        state.badgesEarned[currentRegionId] = true;
+        const rStat = state.regionStats[currentRegionId] || { ans: 12, cor: 12 };
+        const regAcc = rStat.ans > 0 ? Math.round((rStat.cor / rStat.ans) * 100) : 100;
+        if (regAcc > (state.bestRegionAccuracy || 0)) {
+          state.bestRegionAccuracy = regAcc;
+        }
+        if (regAcc >= 90 && !state.unlockedVaultIds.includes('toy_popcorn')) {
+          state.unlockedVaultIds.push('toy_popcorn');
+          state.ownedCounts['toy_popcorn'] = Math.max(1, state.ownedCounts['toy_popcorn'] || 0);
+        }
+        if (regAcc >= 92 && !state.unlockedVaultIds.includes('toy_projector')) {
+          state.unlockedVaultIds.push('toy_projector');
+          state.ownedCounts['toy_projector'] = Math.max(1, state.ownedCounts['toy_projector'] || 0);
+        }
+        state.stars += Math.round(50 * getStarMultiplier());
+      }
+
+      [1, 2, 3, 4].forEach(r => {
+        if (getRegionCompletionStats(r).isComplete) state.badgesEarned[r] = true;
+      });
+
+      saveState();
+      updateHeaderUI();
+      renderRegionSelectorBar();
+      renderMapVisualState();
+
+      setTimeout(() => {
+        if (newlyCompleted) {
+          showRegionWinCelebration(currentRegionId);
+        } else if (newlyUnlockedStreakItem) {
+          showStreakUnlockModal(newlyUnlockedStreakItem);
+        } else {
+          generateNextQuestion();
+        }
+      }, 1050);
+    }
+
+    function checkAndAwardStreakMilestone(currentStreak) {
+      if (currentStreak === 5 && !state.unlockedVaultIds.includes('light_fairy')) {
+        state.unlockedVaultIds.push('light_fairy', 'light_flash');
+        state.ownedCounts['light_fairy'] = (state.ownedCounts['light_fairy'] || 0) + 1;
+        return {
+          icon: '✨🔦',
+          badge: '🔥 5-in-a-Row Easy Streak Unlocked!',
+          title: 'Twinkling String Lights & Spotlight!',
+          desc: 'Awesome 5-streak! You unlocked String Lights & the Secret Agent Spotlight, plus received +1 FREE String Light strand in your Fort Inventory!'
+        };
+      }
+      if (currentStreak === 10 && !state.unlockedVaultIds.includes('toy_trampoline')) {
+        state.unlockedVaultIds.push('toy_trampoline');
+        state.ownedCounts['toy_trampoline'] = (state.ownedCounts['toy_trampoline'] || 0) + 1;
+        return {
+          icon: '👟',
+          badge: '🔥🔥 10-in-a-Row Medium Streak Unlocked!',
+          title: 'Indoor Mini Trampoline!',
+          desc: '10 correct in a row! You unlocked & received +1 FREE Indoor Mini Trampoline! Place it in your fort and tap it to BOING!'
+        };
+      }
+      if (currentStreak === 15 && !state.unlockedVaultIds.includes('toy_slide')) {
+        state.unlockedVaultIds.push('toy_slide');
+        state.ownedCounts['toy_slide'] = (state.ownedCounts['toy_slide'] || 0) + 1;
+        return {
+          icon: '🛝',
+          badge: '🔥🔥🔥 15-in-a-Row Hard Streak Unlocked!',
+          title: 'Turbo Cushion Slide!',
+          desc: 'Incredible 15-streak! You unlocked & received +1 FREE Turbo Cushion Slide for your living room fort!'
+        };
+      }
+      if (currentStreak === 20 && !state.unlockedVaultIds.includes('toy_disco')) {
+        state.unlockedVaultIds.push('toy_disco');
+        state.ownedCounts['toy_disco'] = (state.ownedCounts['toy_disco'] || 0) + 1;
+        return {
+          icon: '🪩',
+          badge: '⚡ 20-in-a-Row MEGA STREAK UNLOCKED!',
+          title: 'Spinning Party Disco Ball!',
+          desc: 'UNSTOPPABLE 20-STREAK! You earned the Spinning Party Disco Ball with animated rainbow light beams!'
+        };
+      }
+      return null;
+    }
+
+    function showStreakUnlockModal(info) {
+      playSound('fanfare');
+      launchConfetti(80);
+      document.getElementById('streak-unlock-icon').textContent = info.icon;
+      document.getElementById('streak-unlock-badge').textContent = info.badge;
+      document.getElementById('streak-unlock-title').textContent = info.title;
+      document.getElementById('streak-unlock-desc').textContent = info.desc;
+      document.getElementById('streak-unlock-modal').classList.remove('hidden');
+    }
+
+    function closeStreakUnlockModal(goToStudio) {
+      document.getElementById('streak-unlock-modal').classList.add('hidden');
+      if (goToStudio) {
+        currentInventoryCat = 'streak';
+        switchTopTab('studio');
+        setInventoryCategory('streak');
+      } else {
+        generateNextQuestion();
+      }
+    }
+
+    function recordWrongAnswer(msg) {
+      state.streak = 0;
+      state.totalAnswered = (state.totalAnswered || 0) + 1;
+      if (!state.regionStats[currentRegionId]) state.regionStats[currentRegionId] = { ans: 0, cor: 0 };
+      state.regionStats[currentRegionId].ans++;
+
+      playSound('wrong');
+      updateHeaderUI();
+      saveState();
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'mt-4 p-3.5 rounded-2xl border-2 border-amber-400 bg-amber-950/90 text-amber-200 text-sm font-bold pop-in';
+      fb.innerHTML = `
+        <div class="text-amber-300 font-extrabold mb-1">💡 Architect Memory Trick (Streak reset to 0):</div>
+        <div class="text-white text-xs sm:text-sm">${msg}</div>
+      `;
+      fb.classList.remove('hidden');
+    }
+
+    function showRegionWinCelebration(regId) {
+      playSound('fanfare');
+      launchConfetti(95);
+
+      const allDone = [1, 2, 3, 4].every(r => state.badgesEarned[r]);
+      if (allDone) {
+        switchTopTab('cert');
+        triggerCelebrationFanfare();
+        return;
+      }
+
+      const reg = REGIONS_META.find(r => r.id === regId);
+      const rStat = state.regionStats[regId] || { ans: 12, cor: 12 };
+      const regAcc = rStat.ans > 0 ? Math.round((rStat.cor / rStat.ans) * 100) : 100;
+      const bonusStars = Math.round(50 * getStarMultiplier());
+
+      document.getElementById('region-win-icon').textContent = reg.icon;
+      document.getElementById('region-win-title').textContent = `${reg.title} Mastered!`;
+      document.getElementById('region-win-desc').textContent =
+        `Region Accuracy: ${regAcc}%! You earned +${bonusStars} Bonus ⭐ Stars${regAcc >= 90 ? ' and unlocked High-Accuracy Rewards in the Streak Vault!' : '!'}`;
+      document.getElementById('region-win-modal').classList.remove('hidden');
+    }
+
+    function closeRegionWinModal(targetTab) {
+      document.getElementById('region-win-modal').classList.add('hidden');
+      switchTopTab(targetTab);
+    }
+
+    /*************************************************************************
+     * 9. LIVING ROOM ARCHITECTURE & DAY/NIGHT LIGHTING ENGINE
+     *************************************************************************/
+    function toggleFortNightMode() {
+      playSound('tap');
+      state.nightMode = !state.nightMode;
+      updateLightingButtonUI();
+      saveState();
+      renderFortSandbox();
+    }
+
+    function updateLightingButtonUI() {
+      const iconEl = document.getElementById('lighting-icon');
+      const labelEl = document.getElementById('lighting-label');
+      const btnEl = document.getElementById('lighting-toggle-btn');
+      if (!iconEl || !labelEl || !btnEl) return;
+
+      if (state.nightMode) {
+        iconEl.textContent = '🌙';
+        labelEl.textContent = 'Cozy Night Mode';
+        btnEl.className = 'px-3.5 py-2 rounded-2xl bg-indigo-950 hover:bg-indigo-900 border-2 border-indigo-400 text-indigo-100 font-heading font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow btn-3d';
+      } else {
+        iconEl.textContent = '☀️';
+        labelEl.textContent = 'Sunny Day Mode';
+        btnEl.className = 'px-3.5 py-2 rounded-2xl bg-amber-400 hover:bg-amber-300 border-2 border-amber-200 text-slate-950 font-heading font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow btn-3d';
+      }
+    }
+
+    function renderRoomBackgroundSVG() {
+      const isNight = state.nightMode;
+      const wallFill = isNight ? '#1e1b4b' : '#e0f2fe';
+      const wainscotFill = isNight ? '#0f172a' : '#bae6fd';
+      const floorFill = isNight ? '#451a03' : '#b45309';
+      const plankStroke = isNight ? '#270e02' : '#92400e';
+      const skyFill = isNight ? '#090d16' : '#38bdf8';
+
+      return `
+        <!-- Main Living Room Wall -->
+        <rect x="0" y="0" width="1000" height="410" fill="${wallFill}" />
+        <!-- Classic Wainscoting Lower Wall Paneling -->
+        <rect x="0" y="290" width="1000" height="120" fill="${wainscotFill}" stroke="#334155" stroke-width="2" />
+        <line x1="0" y1="290" x2="1000" y2="290" stroke="#64748b" stroke-width="4" />
+
+        <!-- Hardwood Living Room Floor -->
+        <rect x="0" y="410" width="1000" height="150" fill="${floorFill}" />
+        <!-- Floorboards Perspective Lines -->
+        <line x1="0" y1="445" x2="1000" y2="445" stroke="${plankStroke}" stroke-width="2" />
+        <line x1="0" y1="485" x2="1000" y2="485" stroke="${plankStroke}" stroke-width="2" />
+        <line x1="0" y1="525" x2="1000" y2="525" stroke="${plankStroke}" stroke-width="2" />
+
+        <!-- Cozy Braided Living Room Area Rug -->
+        <ellipse cx="520" cy="485" rx="370" ry="52" fill="#4f46e5" stroke="#818cf8" stroke-width="5" />
+        <ellipse cx="520" cy="485" rx="320" ry="38" fill="#6366f1" stroke="#c7d2fe" stroke-width="2.5" stroke-dasharray="10,6" />
+
+        <!-- Picture Window on Left Wall -->
+        <g transform="translate(85, 58)">
+          <rect x="0" y="0" width="175" height="190" rx="10" fill="${skyFill}" stroke="#f8fafc" stroke-width="8" />
+          ${
+            isNight
+              ? `
+                <!-- Crescent Moon & Twinkling Night Stars -->
+                <circle cx="128" cy="48" r="20" fill="#fde047" />
+                <circle cx="136" cy="42" r="17" fill="${skyFill}" />
+                <circle cx="38" cy="40" r="2.2" fill="#ffffff" class="twinkle-bulb" />
+                <circle cx="72" cy="28" r="1.8" fill="#fde047" class="twinkle-bulb-alt" />
+                <circle cx="52" cy="82" r="2" fill="#ffffff" class="twinkle-bulb" />
+                <circle cx="135" cy="105" r="2.2" fill="#38bdf8" class="twinkle-bulb-alt" />
+              `
+              : `
+                <!-- Warm Golden Sun & Fluffy Clouds -->
+                <circle cx="50" cy="48" r="22" fill="#fde047" />
+                <ellipse cx="122" cy="70" rx="28" ry="13" fill="#ffffff" opacity="0.9" />
+                <ellipse cx="108" cy="64" rx="18" ry="12" fill="#ffffff" opacity="0.9" />
+              `
+          }
+          <!-- Distant Pine Trees Silhouette -->
+          <polygon points="10,186 38,125 66,186" fill="#064e3b" />
+          <polygon points="50,186 85,110 120,186" fill="#047857" />
+          <polygon points="105,186 140,128 170,186" fill="#065f46" />
+          <!-- Window Panes Crossbars -->
+          <line x1="87.5" y1="0" x2="87.5" y2="190" stroke="#f8fafc" stroke-width="6" />
+          <line x1="0" y1="95" x2="175" y2="95" stroke="#f8fafc" stroke-width="6" />
+          <!-- Window Sill -->
+          <rect x="-10" y="186" width="195" height="12" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" />
+        </g>
+
+        <!-- Framed East Coast Explorer Map Poster on Center-Right Wall -->
+        <g transform="translate(745, 65)">
+          <rect x="0" y="0" width="155" height="115" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="5" />
+          <rect x="8" y="8" width="139" height="99" rx="3" fill="#0c4a6e" />
+          <path d="M 95,18 L 118,32 L 100,55 L 78,78 L 88,98 L 68,85 L 55,62 Z" fill="#34d399" opacity="0.85" />
+          <text x="77" y="101" text-anchor="middle" fill="#fde047" font-family="Fredoka" font-size="9.5" font-weight="800">EAST COAST ARCHITECT</text>
+        </g>
+
+        <!-- Built-In Wooden Bookshelf on Far Right -->
+        <g transform="translate(835, 210)">
+          <rect x="0" y="0" width="125" height="205" rx="6" fill="#78350f" stroke="#451a03" stroke-width="4" />
+          <rect x="10" y="12" width="105" height="52" fill="#451a03" />
+          <rect x="10" y="74" width="105" height="52" fill="#451a03" />
+          <rect x="10" y="136" width="105" height="56" fill="#451a03" />
+          <!-- Colorful Books on Shelves -->
+          <rect x="16" y="24" width="12" height="40" rx="2" fill="#f43f5e" />
+          <rect x="30" y="20" width="14" height="44" rx="2" fill="#3b82f6" />
+          <rect x="46" y="26" width="11" height="38" rx="2" fill="#10b981" />
+          <rect x="60" y="22" width="14" height="42" rx="2" fill="#fbbf24" transform="rotate(12 60 42)" />
+          <!-- Trophy Globe on Middle Shelf -->
+          <circle cx="42" cy="104" r="14" fill="#38bdf8" stroke="#fde047" stroke-width="2.5" />
+          <rect x="34" y="118" width="16" height="6" rx="2" fill="#fbbf24" />
+        </g>
+
+        <!-- Cozy Living Room Sofa Frame Base (Center-Back Anchor for Cushions & Blankets) -->
+        <g transform="translate(360, 275)">
+          <rect x="20" y="0" width="320" height="95" rx="22" fill="#334155" stroke="#1e293b" stroke-width="4" />
+          <rect x="-12" y="38" width="48" height="105" rx="18" fill="#475569" stroke="#1e293b" stroke-width="4" />
+          <rect x="324" y="38" width="48" height="105" rx="18" fill="#475569" stroke="#1e293b" stroke-width="4" />
+          <rect x="18" y="88" width="324" height="52" rx="10" fill="#1e293b" stroke="#0f172a" stroke-width="3" />
+          <rect x="6" y="138" width="14" height="20" rx="3" fill="#78350f" />
+          <rect x="340" y="138" width="14" height="20" rx="3" fill="#78350f" />
+        </g>
+      `;
+    }
+
+    /*************************************************************************
+     * 10. VECTOR ARTWORK GENERATOR FOR ALL 28 MODULAR FORT PIECES + HOT TICKETS
+     *************************************************************************/
+    function getPieceArtworkSVG(piece) {
+      const pal = FABRIC_PALETTES[piece.colorIdx ?? 0] || FABRIC_PALETTES[0];
+      const safeName = (state.playerName || 'Architect').replace(/[<>]/g, '').toUpperCase();
+      const isNight = state.nightMode;
+
+      switch (piece.typeId) {
+        case 'cush_square':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-75" y="-38" width="150" height="76" rx="18" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <rect x="-66" y="-29" width="132" height="58" rx="12" fill="none" stroke="${pal.accent}" stroke-width="2" stroke-dasharray="6,4" opacity="0.75" />
+              <circle cx="-38" cy="0" r="4" fill="${pal.stroke}" />
+              <circle cx="0" cy="0" r="4" fill="${pal.stroke}" />
+              <circle cx="38" cy="0" r="4" fill="${pal.stroke}" />
+            </g>
+          `;
+
+        case 'cush_lean':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-95" y="-24" width="190" height="48" rx="16" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <line x1="-80" y1="0" x2="80" y2="0" stroke="${pal.accent}" stroke-width="2.5" stroke-dasharray="8,5" opacity="0.7" />
+              <circle cx="-45" cy="0" r="3.5" fill="${pal.stroke}" />
+              <circle cx="45" cy="0" r="3.5" fill="${pal.stroke}" />
+            </g>
+          `;
+
+        case 'cush_pillar':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-34" y="-95" width="68" height="190" rx="20" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <rect x="-24" y="-82" width="48" height="164" rx="12" fill="none" stroke="${pal.accent}" stroke-width="2" opacity="0.65" />
+              <circle cx="0" cy="-45" r="4" fill="${pal.stroke}" />
+              <circle cx="0" cy="0" r="4" fill="${pal.stroke}" />
+              <circle cx="0" cy="45" r="4" fill="${pal.stroke}" />
+            </g>
+          `;
+
+        case 'supp_chair':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-42" y="-95" width="12" height="175" rx="4" fill="#d97706" stroke="#78350f" stroke-width="3" />
+              <rect x="-32" y="-82" width="64" height="14" rx="4" fill="#f59e0b" stroke="#78350f" stroke-width="2.5" />
+              <rect x="-32" y="-52" width="64" height="14" rx="4" fill="#f59e0b" stroke="#78350f" stroke-width="2.5" />
+              <rect x="-42" y="-8" width="90" height="18" rx="6" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="3" />
+              <rect x="32" y="8" width="12" height="72" rx="4" fill="#d97706" stroke="#78350f" stroke-width="3" />
+              <rect x="-32" y="42" width="66" height="8" fill="#b45309" />
+            </g>
+          `;
+
+        case 'supp_books':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-52" y="12" width="104" height="22" rx="5" fill="#ef4444" stroke="#7f1d1d" stroke-width="2.5" />
+              <rect x="-44" y="16" width="88" height="14" rx="2" fill="#fef2f2" />
+              <rect x="-48" y="-10" width="96" height="22" rx="5" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2.5" />
+              <rect x="-40" y="-6" width="80" height="14" rx="2" fill="#eff6ff" />
+              <rect x="-42" y="-32" width="84" height="22" rx="5" fill="#10b981" stroke="#064e3b" stroke-width="2.5" />
+              <line x1="-25" y1="-21" x2="25" y2="-21" stroke="#fde047" stroke-width="3" />
+            </g>
+          `;
+
+        case 'supp_box':
+          return `
+            <g filter="url(#softDropShadow)">
+              <polygon points="-70,-40 -70,-70 -45,-70 -45,-45 -15,-45 -15,-70 15,-70 15,-45 45,-45 45,-70 70,-70 70,-40 70,65 -70,65" fill="#d97706" stroke="#78350f" stroke-width="3.5" />
+              <line x1="-70" y1="-25" x2="70" y2="-25" stroke="#92400e" stroke-width="2" stroke-dasharray="6,4" />
+              <path d="M -18,15 L -18,-8 A 18,18 0 0,1 18,-8 L 18,15 Z" fill="#090d16" stroke="#fef08a" stroke-width="2.5" />
+              <text x="0" y="45" text-anchor="middle" fill="#fef3c7" font-family="Fredoka" font-size="13" font-weight="800">FORT TOWER</text>
+            </g>
+          `;
+
+        case 'blanket_canopy':
+          return `
+            <g filter="url(#softDropShadow)">
+              <path d="M -195,55 Q -95,-65 0,-75 Q 95,-65 195,55 Q 115,35 0,-25 Q -115,35 -195,55 Z" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <path d="M -190,52 Q -95,-20 0,-26 Q 95,-20 190,52" fill="none" stroke="#fde047" stroke-width="3.5" stroke-dasharray="8,6" />
+              <circle cx="-192" cy="58" r="6" fill="#fde047" />
+              <circle cx="0" cy="-78" r="7" fill="#fde047" />
+              <circle cx="192" cy="58" r="6" fill="#fde047" />
+            </g>
+          `;
+
+        case 'blanket_slope':
+          return `
+            <g filter="url(#softDropShadow)">
+              <path d="M -140,-55 L 140,35 L 115,75 L -160,-15 Z" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <path d="M -125,-38 L 125,48" stroke="${pal.accent}" stroke-width="2.5" stroke-dasharray="10,6" />
+            </g>
+          `;
+
+        case 'blanket_tunnel':
+          return `
+            <g filter="url(#softDropShadow)">
+              <polygon points="-155,85 0,-95 155,85" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <path d="M -95,85 Q 0,-45 95,85 Z" fill="#090d16" stroke="#fde047" stroke-width="3" />
+              <path d="M 0,-95 Q -55,0 -115,85 L -85,85 Q -35,10 0,-60 Z" fill="${pal.accent}" opacity="0.65" />
+              <path d="M 0,-95 Q 55,0 115,85 L 85,85 Q 35,10 0,-60 Z" fill="${pal.accent}" opacity="0.65" />
+            </g>
+          `;
+
+        case 'blanket_mat':
+          return `
+            <g filter="url(#softDropShadow)">
+              <ellipse cx="0" cy="0" rx="145" ry="26" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <ellipse cx="0" cy="0" rx="120" ry="17" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="8,5" />
+            </g>
+          `;
+
+        case 'pillow_throw':
+          return `
+            <g filter="url(#softDropShadow)">
+              <path d="M -42,-36 Q 0,-28 42,-36 Q 34,0 42,36 Q 0,28 -42,36 Q -34,0 -42,-36 Z" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="3.5" />
+              <circle cx="-44" cy="-38" r="5" fill="#fde047" />
+              <circle cx="44" cy="-38" r="5" fill="#fde047" />
+              <circle cx="-44" cy="38" r="5" fill="#fde047" />
+              <circle cx="44" cy="38" r="5" fill="#fde047" />
+            </g>
+          `;
+
+        case 'pillow_pouf':
+          return `
+            <g filter="url(#softDropShadow)">
+              <ellipse cx="0" cy="0" rx="52" ry="34" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="3.5" />
+              <path d="M -38,-14 Q 0,10 38,-14 M -44,6 Q 0,22 44,6" fill="none" stroke="${pal.accent}" stroke-width="2.5" />
+              <circle cx="0" cy="-4" r="6" fill="#fde047" stroke="${pal.stroke}" stroke-width="2" />
+            </g>
+          `;
+
+        case 'pillow_star':
+          return `
+            <g filter="url(#softDropShadow)">
+              <polygon points="0,-48 14,-16 48,-12 22,12 29,46 0,28 -29,46 -22,12 -48,-12 -14,-16" fill="#fbbf24" stroke="#d97706" stroke-width="3.5" stroke-linejoin="round" />
+              <circle cx="-10" cy="-4" r="3" fill="#0f172a" />
+              <circle cx="10" cy="-4" r="3" fill="#0f172a" />
+              <path d="M -7,6 Q 0,12 7,6" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" />
+            </g>
+          `;
+
+        case 'pillow_bolster':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-68" y="-20" width="136" height="40" rx="20" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="3.5" />
+              <ellipse cx="-52" cy="0" rx="7" ry="18" fill="${pal.accent}" stroke="${pal.stroke}" stroke-width="2" />
+              <ellipse cx="52" cy="0" rx="7" ry="18" fill="${pal.accent}" stroke="${pal.stroke}" stroke-width="2" />
+            </g>
+          `;
+
+        case 'light_fairy':
+          return `
+            <g>
+              ${isNight ? `<ellipse cx="0" cy="10" rx="185" ry="55" fill="url(#warmLightHalo)" />` : ''}
+              <path d="M -165,-18 Q -82,36 0,-12 Q 82,36 165,-18" fill="none" stroke="#cbd5e1" stroke-width="2.5" />
+              ${[-145, -108, -72, -36, 0, 36, 72, 108, 145].map((bx, i) => {
+                const by = Math.abs(bx) % 72 === 0 ? -4 : 14;
+                const col = ['#fde047', '#f43f5e', '#38bdf8', '#4ade80'][i % 4];
+                return `
+                  <g class="${i % 2 === 0 ? 'twinkle-bulb' : 'twinkle-bulb-alt'}">
+                    ${isNight ? `<circle cx="${bx}" cy="${by}" r="16" fill="${col}" opacity="0.32" />` : ''}
+                    <circle cx="${bx}" cy="${by}" r="7.5" fill="${col}" stroke="#ffffff" stroke-width="1.5" />
+                  </g>
+                `;
+              }).join('')}
+            </g>
+          `;
+
+        case 'light_flash':
+          return `
+            <g>
+              <polygon points="20,0 245,-75 245,75" fill="url(#flashlightBeamGrad)" opacity="${isNight ? '0.95' : '0.45'}" />
+              <rect x="-32" y="-12" width="52" height="24" rx="6" fill="${pal.fill}" stroke="#ffffff" stroke-width="2.5" />
+              <polygon points="20,-16 32,-20 32,20 20,16" fill="#fde047" stroke="#ca8a04" stroke-width="2" />
+            </g>
+          `;
+
+        case 'toy_trampoline':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-78" y="8" width="10" height="32" rx="4" fill="#64748b" stroke="#0f172a" stroke-width="2.5" />
+              <rect x="68" y="8" width="10" height="32" rx="4" fill="#64748b" stroke="#0f172a" stroke-width="2.5" />
+              <rect x="-5" y="12" width="10" height="30" rx="4" fill="#475569" stroke="#0f172a" stroke-width="2.5" />
+              <ellipse cx="0" cy="0" rx="95" ry="28" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <ellipse cx="0" cy="0" rx="72" ry="19" fill="#0f172a" stroke="#fde047" stroke-width="2" stroke-dasharray="6,4" />
+              <text x="0" y="5" text-anchor="middle" fill="#fde047" font-family="Fredoka" font-size="13" font-weight="900">👟 BOING!</text>
+            </g>
+          `;
+
+        case 'toy_slide':
+          return `
+            <g filter="url(#softDropShadow)">
+              <line x1="-105" y1="-68" x2="-105" y2="65" stroke="#d97706" stroke-width="8" stroke-linecap="round" />
+              <line x1="-75" y1="-68" x2="-75" y2="65" stroke="#d97706" stroke-width="8" stroke-linecap="round" />
+              <line x1="-105" y1="-40" x2="-75" y2="-40" stroke="#fef08a" stroke-width="5" />
+              <line x1="-105" y1="-5" x2="-75" y2="-5" stroke="#fef08a" stroke-width="5" />
+              <line x1="-105" y1="30" x2="-75" y2="30" stroke="#fef08a" stroke-width="5" />
+              <path d="M -95,-72 L -45,-72 C 10,-72 35,45 115,52 L 115,74 C 15,74 -15,-42 -65,-42 L -95,-42 Z" fill="${pal.fill}" stroke="${pal.stroke}" stroke-width="4" />
+              <path d="M -85,-64 L -45,-64 C 12,-64 38,50 110,56" fill="none" stroke="#fde047" stroke-width="3.5" stroke-dasharray="10,6" />
+              <text x="20" y="15" text-anchor="middle" fill="#ffffff" font-family="Fredoka" font-size="12" font-weight="800" transform="rotate(34 20 15)">🛝 WHOOSH!</text>
+            </g>
+          `;
+
+        case 'toy_disco':
+          return `
+            <g>
+              <g class="disco-spin" opacity="${isNight ? '0.85' : '0.45'}">
+                <polygon points="0,0 -220,-180 -140,-220" fill="#f43f5e" opacity="0.35" />
+                <polygon points="0,0 220,-170 150,-220" fill="#38bdf8" opacity="0.35" />
+                <polygon points="0,0 250,140 180,210" fill="#fde047" opacity="0.35" />
+                <polygon points="0,0 -250,150 -170,215" fill="#4ade80" opacity="0.35" />
+                <polygon points="0,0 -60,260 60,260" fill="#c084fc" opacity="0.35" />
+              </g>
+              <line x1="0" y1="-85" x2="0" y2="-38" stroke="#e2e8f0" stroke-width="4" />
+              <circle cx="0" cy="0" r="38" fill="#cbd5e1" stroke="#f8fafc" stroke-width="3.5" filter="url(#softDropShadow)" />
+              <path d="M -36,0 L 36,0 M -28,-20 L 28,-20 M -28,20 L 28,20 M 0,-36 L 0,36 M -18,-32 L -18,32 M 18,-32 L 18,32" stroke="#475569" stroke-width="2" />
+              <circle cx="-12" cy="-12" r="5" fill="#ffffff" class="twinkle-bulb" />
+              <circle cx="14" cy="10" r="4.5" fill="#fde047" class="twinkle-bulb-alt" />
+              <circle cx="10" cy="-16" r="4" fill="#38bdf8" class="twinkle-bulb" />
+            </g>
+          `;
+
+        case 'toy_popcorn':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-45" y="0" width="90" height="58" rx="6" fill="#ef4444" stroke="#7f1d1d" stroke-width="3" />
+              <rect x="-28" y="4" width="14" height="50" fill="#ffffff" />
+              <rect x="0" y="4" width="14" height="50" fill="#ffffff" />
+              <rect x="28" y="4" width="12" height="50" fill="#ffffff" />
+              <rect x="-42" y="-52" width="84" height="52" rx="6" fill="#fef9c3" fill-opacity="0.35" stroke="#fbbf24" stroke-width="3.5" />
+              <circle cx="-22" cy="-12" r="11" fill="#fde047" />
+              <circle cx="0" cy="-16" r="13" fill="#fef08a" />
+              <circle cx="20" cy="-11" r="11" fill="#fde047" />
+              <circle cx="-10" cy="-24" r="10" fill="#fde047" />
+              <circle cx="12" cy="-22" r="10" fill="#fef08a" />
+              <polygon points="-52,-52 0,-74 52,-52" fill="#ef4444" stroke="#fbbf24" stroke-width="3" />
+              <circle cx="-32" cy="58" r="16" fill="#1e293b" stroke="#fbbf24" stroke-width="4" />
+              <circle cx="32" cy="58" r="16" fill="#1e293b" stroke="#fbbf24" stroke-width="4" />
+            </g>
+          `;
+
+        case 'toy_projector':
+          return `
+            <g>
+              <g opacity="${isNight ? '0.92' : '0.5'}">
+                <polygon points="0,-18 -195,-190 195,-190" fill="url(#galaxyPattern)" opacity="0.55" />
+                <circle cx="-75" cy="-135" r="4" fill="#fde047" class="twinkle-bulb" />
+                <circle cx="65" cy="-145" r="4.5" fill="#38bdf8" class="twinkle-bulb-alt" />
+                <circle cx="0" cy="-165" r="5" fill="#f472b6" class="twinkle-bulb" />
+                <line x1="-75" y1="-135" x2="0" y2="-165" stroke="#fde047" stroke-width="1.5" stroke-dasharray="4,4" />
+                <line x1="0" y1="-165" x2="65" y2="-145" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4" />
+              </g>
+              <ellipse cx="0" cy="22" rx="34" ry="12" fill="#334155" stroke="#94a3b8" stroke-width="2.5" />
+              <circle cx="0" cy="0" r="24" fill="#1e1b4b" stroke="#38bdf8" stroke-width="3.5" />
+              <circle cx="0" cy="-6" r="11" fill="#fde047" class="twinkle-bulb" />
+            </g>
+          `;
+
+        case 'toy_throne':
+          return `
+            <g filter="url(#softDropShadow)">
+              <path d="M -52,45 L -58,-68 L -28,-48 L 0,-82 L 28,-48 L 58,-68 L 52,45 Z" fill="#fbbf24" stroke="#b45309" stroke-width="4" />
+              <rect x="-40" y="-42" width="80" height="78" rx="16" fill="${pal.fill}" stroke="#fde047" stroke-width="3" />
+              <circle cx="-18" cy="-15" r="4" fill="#fde047" />
+              <circle cx="18" cy="-15" r="4" fill="#fde047" />
+              <circle cx="0" cy="-28" r="5" fill="#38bdf8" />
+              <rect x="-56" y="18" width="112" height="24" rx="10" fill="#be123c" stroke="#fde047" stroke-width="3" />
+              <rect x="-48" y="42" width="14" height="28" rx="4" fill="#fbbf24" stroke="#b45309" stroke-width="2.5" />
+              <rect x="34" y="42" width="14" height="28" rx="4" fill="#fbbf24" stroke="#b45309" stroke-width="2.5" />
+            </g>
+          `;
+
+        case 'light_lantern':
+          return `
+            <g filter="url(#softDropShadow)">
+              ${isNight ? `<circle cx="0" cy="5" r="120" fill="url(#warmLightHalo)" />` : ''}
+              <path d="M -14,-28 A 14,14 0 0,1 14,-28" fill="none" stroke="#94a3b8" stroke-width="3" />
+              <rect x="-22" y="-24" width="44" height="54" rx="8" fill="${pal.fill}" stroke="#fde047" stroke-width="3" />
+              <rect x="-14" y="-14" width="28" height="32" rx="4" fill="#fef08a" class="twinkle-bulb" />
+              <rect x="-26" y="26" width="52" height="10" rx="4" fill="#475569" />
+            </g>
+          `;
+
+        case 'prop_sign':
+          return `
+            <g filter="url(#softDropShadow)">
+              <path d="M -70,-22 L 0,-48 L 70,-22" fill="none" stroke="#fbbf24" stroke-width="3" />
+              <rect x="-118" y="-24" width="236" height="52" rx="12" fill="#fef08a" stroke="#d97706" stroke-width="4" />
+              <circle cx="-104" cy="2" r="4" fill="#78350f" />
+              <circle cx="104" cy="2" r="4" fill="#78350f" />
+              <text x="0" y="0" text-anchor="middle" fill="#1e1b4b" font-family="Fredoka, sans-serif" font-size="15" font-weight="800">
+                ⛺ ${safeName}'S FORT
+              </text>
+              <text x="0" y="18" text-anchor="middle" fill="#b45309" font-family="Nunito, sans-serif" font-size="11" font-weight="900">
+                RIVENDELL ARCHITECTS CLUB
+              </text>
+            </g>
+          `;
+
+        case 'prop_easel':
+          return `
+            <g filter="url(#softDropShadow)">
+              <line x1="0" y1="-78" x2="-36" y2="75" stroke="#d97706" stroke-width="7" stroke-linecap="round" />
+              <line x1="0" y1="-78" x2="36" y2="75" stroke="#d97706" stroke-width="7" stroke-linecap="round" />
+              <line x1="0" y1="-78" x2="0" y2="68" stroke="#92400e" stroke-width="6" stroke-linecap="round" />
+              <rect x="-42" y="-58" width="84" height="92" rx="6" fill="#ffffff" stroke="#fbbf24" stroke-width="4" />
+              <circle cx="-16" cy="-32" r="11" fill="#f43f5e" />
+              <circle cx="18" cy="-34" r="9" fill="#fde047" />
+              <path d="M -36,26 Q -10,-12 12,14 T 36,2 L 36,28 L -36,28 Z" fill="#38bdf8" />
+              <rect x="-48" y="32" width="96" height="8" rx="3" fill="#b45309" />
+            </g>
+          `;
+
+        case 'prop_soccer':
+          return `
+            <g filter="url(#softDropShadow)">
+              <circle cx="0" cy="0" r="30" fill="#ffffff" stroke="#0f172a" stroke-width="3.5" />
+              <polygon points="0,-14 13,-4 8,11 -8,11 -13,-4" fill="#0f172a" />
+              <line x1="0" y1="-14" x2="0" y2="-30" stroke="#0f172a" stroke-width="3" />
+              <line x1="13" y1="-4" x2="28" y2="-10" stroke="#0f172a" stroke-width="3" />
+              <line x1="8" y1="11" x2="18" y2="25" stroke="#0f172a" stroke-width="3" />
+              <line x1="-8" y1="11" x2="-18" y2="25" stroke="#0f172a" stroke-width="3" />
+              <line x1="-13" y1="-4" x2="-28" y2="-10" stroke="#0f172a" stroke-width="3" />
+            </g>
+          `;
+
+        case 'prop_snacks':
+          return `
+            <g filter="url(#softDropShadow)">
+              <rect x="-62" y="12" width="124" height="16" rx="6" fill="#b45309" stroke="#fef08a" stroke-width="2" />
+              <ellipse cx="-22" cy="10" rx="28" ry="8" fill="#e2e8f0" />
+              <circle cx="-30" cy="2" r="10" fill="#d97706" stroke="#78350f" stroke-width="1.5" />
+              <circle cx="-16" cy="4" r="10" fill="#d97706" stroke="#78350f" stroke-width="1.5" />
+              <circle cx="-23" cy="-5" r="10" fill="#f59e0b" stroke="#78350f" stroke-width="1.5" />
+              <circle cx="-25" cy="-6" r="1.8" fill="#451a03" />
+              <circle cx="-20" cy="-3" r="1.8" fill="#451a03" />
+              <rect x="18" y="-16" width="26" height="28" rx="5" fill="#f43f5e" stroke="#ffffff" stroke-width="2.5" />
+              <path d="M 44,-10 Q 54,-2 44,6" fill="none" stroke="#ffffff" stroke-width="3" />
+              <circle cx="26" cy="-16" r="4" fill="#ffffff" />
+              <circle cx="35" cy="-16" r="4" fill="#ffffff" />
+            </g>
+          `;
+
+        case 'prop_puppy':
+          return `
+            <g filter="url(#softDropShadow)">
+              <ellipse cx="0" cy="18" rx="38" ry="24" fill="#fbbf24" stroke="#b45309" stroke-width="3" />
+              <circle cx="-20" cy="-10" r="22" fill="#fcd34d" stroke="#b45309" stroke-width="3" />
+              <ellipse cx="-38" cy="-6" rx="8" ry="16" transform="rotate(15 -38 -6)" fill="#d97706" />
+              <ellipse cx="-2" cy="-6" rx="8" ry="16" transform="rotate(-15 -2 -6)" fill="#d97706" />
+              <circle cx="-27" cy="-14" r="3" fill="#0f172a" />
+              <circle cx="-13" cy="-14" r="3" fill="#0f172a" />
+              <ellipse cx="-20" cy="-6" rx="5" ry="3.5" fill="#0f172a" />
+              <path d="M -34,6 Q -20,14 -6,6" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round" />
+              <circle cx="-20" cy="12" r="4" fill="#fde047" />
+            </g>
+          `;
+
+        default:
+          return `<circle r="30" fill="${pal.fill}" />`;
+      }
+    }
+
+    /*************************************************************************
+     * 11. SANDBOX RENDERING & POINTER DRAG-AND-DROP ENGINE
+     *************************************************************************/
+    function renderFortSandbox() {
+      const bgLayer = document.getElementById('room-background-layer');
+      const piecesLayer = document.getElementById('fort-pieces-layer');
+      const lightOverlay = document.getElementById('room-lighting-overlay');
+      if (!bgLayer || !piecesLayer) return;
+
+      bgLayer.innerHTML = renderRoomBackgroundSVG();
+
+      const sorted = [...state.placedPieces].sort((a, b) => (a.z || 0) - (b.z || 0));
+      piecesLayer.innerHTML = '';
+
+      sorted.forEach(piece => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const isSelected = piece.uid === selectedPieceUid;
+        g.setAttribute('class', `fort-piece ${isSelected ? 'fort-piece-selected' : ''}`);
+        g.setAttribute(
+          'transform',
+          `translate(${piece.x}, ${piece.y}) rotate(${piece.rot || 0}) scale(${(piece.scale || 1) * (piece.flip || 1)}, ${piece.scale || 1})`
+        );
+        g.dataset.uid = piece.uid;
+
+        const selectionRing = isSelected
+          ? `<circle cx="0" cy="0" r="68" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="7,5" pointer-events="none" />`
+          : '';
+
+        g.innerHTML = getPieceArtworkSVG(piece) + selectionRing;
+
+        g.addEventListener('pointerdown', e => startPieceDrag(e, piece.uid));
+        piecesLayer.appendChild(g);
+      });
+
+      if (state.nightMode) {
+        lightOverlay.innerHTML = `
+          <rect width="1000" height="560" fill="#020617" opacity="0.16" />
+        `;
+      } else {
+        lightOverlay.innerHTML = '';
+      }
+
+      updateInspectorBarUI();
+      updateHeaderUI();
+    }
+
+    function getSvgPointFromEvent(svgEl, clientX, clientY) {
+      const rect = svgEl.getBoundingClientRect();
+      const scaleX = 1000 / rect.width;
+      const scaleY = 560 / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function startPieceDrag(e, uid) {
+      e.stopPropagation();
+      const piece = state.placedPieces.find(p => p.uid === uid);
+      if (!piece) return;
+
+      const wasAlreadySelected = selectedPieceUid === uid;
+      selectedPieceUid = uid;
+
+      if (piece.typeId === 'toy_trampoline') {
+        playSound('boing');
+      } else if (piece.typeId === 'toy_slide') {
+        playSound('slide');
+      } else {
+        playSound('tap');
+      }
+
+      if (!wasAlreadySelected) {
+        renderFortSandbox();
+      }
+
+      const svgEl = document.getElementById('fort-sandbox-svg');
+      const pt = getSvgPointFromEvent(svgEl, e.clientX, e.clientY);
+
+      dragState = {
+        uid,
+        startX: pt.x,
+        startY: pt.y,
+        origX: piece.x,
+        origY: piece.y,
+        moved: false
+      };
+    }
+
+    function handleGlobalPointerMove(e) {
+      if (!dragState) return;
+      const svgEl = document.getElementById('fort-sandbox-svg');
+      const pt = getSvgPointFromEvent(svgEl, e.clientX, e.clientY);
+
+      const dx = pt.x - dragState.startX;
+      const dy = pt.y - dragState.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragState.moved = true;
+
+      const piece = state.placedPieces.find(p => p.uid === dragState.uid);
+      if (!piece) return;
+
+      piece.x = Math.max(45, Math.min(955, Math.round(dragState.origX + dx)));
+      piece.y = Math.max(45, Math.min(525, Math.round(dragState.origY + dy)));
+
+      const el = document.querySelector(`#fort-pieces-layer g[data-uid="${piece.uid}"]`);
+      if (el) {
+        el.setAttribute(
+          'transform',
+          `translate(${piece.x}, ${piece.y}) rotate(${piece.rot || 0}) scale(${(piece.scale || 1) * (piece.flip || 1)}, ${piece.scale || 1})`
+        );
+      }
+    }
+
+    function handleGlobalPointerUp() {
+      if (!dragState) return;
+      const uid = dragState.uid;
+      const wasTap = !dragState.moved;
+      dragState = null;
+
+      const piece = state.placedPieces.find(p => p.uid === uid);
+      if (piece && wasTap) {
+        const catItem = MODULAR_CATALOG.find(c => c.id === piece.typeId);
+        if (catItem && catItem.isInteractiveToy) {
+          animateInteractiveToy(piece);
+        }
+      } else {
+        playSound('plop');
+      }
+      saveState();
+    }
+
+    function animateInteractiveToy(piece) {
+      if (piece.typeId === 'toy_trampoline') {
+        playSound('boing');
+      } else if (piece.typeId === 'toy_slide') {
+        playSound('slide');
+      } else {
+        playSound('unlock');
+      }
+      launchConfetti(28);
+      const el = document.querySelector(`#fort-pieces-layer g[data-uid="${piece.uid}"]`);
+      if (el) {
+        const inner = el.firstElementChild;
+        if (inner) {
+          inner.classList.remove('boing-anim');
+          void inner.offsetWidth;
+          inner.classList.add('boing-anim');
+        }
+      }
+    }
+
+    function triggerSelectedPieceToyAction() {
+      const piece = state.placedPieces.find(p => p.uid === selectedPieceUid);
+      if (piece) animateInteractiveToy(piece);
+    }
+
+    function deselectFortPiece() {
+      if (selectedPieceUid) {
+        selectedPieceUid = null;
+        renderFortSandbox();
+      }
+    }
+
+    /*************************************************************************
+     * 12. FLOATING INSPECTOR TOOLBAR ACTIONS (WITH QUANTITY-AWARE +1 BUTTON)
+     *************************************************************************/
+    function updateInspectorBarUI() {
+      const bar = document.getElementById('fort-inspector-bar');
+      if (!selectedPieceUid) {
+        bar.classList.add('hidden');
+        return;
+      }
+      const piece = state.placedPieces.find(p => p.uid === selectedPieceUid);
+      if (!piece) {
+        bar.classList.add('hidden');
+        return;
+      }
+      const catItem = MODULAR_CATALOG.find(c => c.id === piece.typeId);
+      if (!catItem) return;
+
+      const placedCount = state.placedPieces.filter(p => p.typeId === catItem.id).length;
+      const ownedCount = state.ownedCounts[catItem.id] || 0;
+      const maxCap = getEffectiveMaxCap(catItem);
+
+      document.getElementById('inspector-item-label').textContent =
+        `${catItem.icon} ${catItem.name} (${placedCount}/${ownedCount} Owned • Max ${maxCap})`;
+
+      const playBtn = document.getElementById('inspector-play-btn');
+      if (catItem.isInteractiveToy) {
+        playBtn.classList.remove('hidden');
+      } else {
+        playBtn.classList.add('hidden');
+      }
+
+      const addOneBtn = document.getElementById('inspector-add-one-btn');
+      if (placedCount < ownedCount) {
+        addOneBtn.textContent = `➕ Place Owned (${ownedCount - placedCount} left)`;
+        addOneBtn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold btn-3d';
+      } else if (ownedCount < maxCap) {
+        addOneBtn.textContent = `🛒 Buy +1 (${catItem.cost} ⭐)`;
+        addOneBtn.className = state.stars >= catItem.cost
+          ? 'px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold btn-3d'
+          : 'px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-500 text-xs font-bold cursor-not-allowed';
+      } else {
+        addOneBtn.textContent = `Max Cap (${maxCap})`;
+        addOneBtn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-500 text-xs font-bold cursor-not-allowed';
+      }
+
+      bar.classList.remove('hidden');
+    }
+
+    function transformSelectedPiece(action, delta) {
+      const piece = state.placedPieces.find(p => p.uid === selectedPieceUid);
+      if (!piece) return;
+      playSound('plop');
+
+      if (action === 'rotate') {
+        piece.rot = ((piece.rot || 0) + delta) % 360;
+      } else if (action === 'scale') {
+        piece.scale = Math.max(0.55, Math.min(2.1, Number(((piece.scale || 1) + delta).toFixed(2))));
+      } else if (action === 'flip') {
+        piece.flip = (piece.flip || 1) * -1;
+      } else if (action === 'layer') {
+        const maxZ = state.placedPieces.reduce((m, p) => Math.max(m, p.z || 0), 0);
+        const minZ = state.placedPieces.reduce((m, p) => Math.min(m, p.z || 0), 0);
+        piece.z = delta > 0 ? maxZ + 1 : minZ - 1;
+      }
+
+      saveState();
+      renderFortSandbox();
+    }
+
+    function setSelectedPieceColor(colorIdx) {
+      const piece = state.placedPieces.find(p => p.uid === selectedPieceUid);
+      if (!piece) return;
+      playSound('tap');
+      piece.colorIdx = colorIdx;
+      saveState();
+      renderFortSandbox();
+    }
+
+    function addOrBuyAnotherOfSelected() {
+      const piece = state.placedPieces.find(p => p.uid === selectedPieceUid);
+      if (!piece) return;
+      const catItem = MODULAR_CATALOG.find(c => c.id === piece.typeId);
+      if (!catItem) return;
+      handleInventoryItemClick(catItem);
+    }
+
+    function deleteSelectedPiece() {
+      if (!selectedPieceUid) return;
+      playSound('tap');
+      state.placedPieces = state.placedPieces.filter(p => p.uid !== selectedPieceUid);
+      selectedPieceUid = null;
+      saveState();
+      renderFortSandbox();
+      renderInventoryDock();
+    }
+
+    function arrangeOwnedPiecesNeatly() {
+      playSound('unlock');
+      const newLayout = [];
+      let zCounter = 1;
+      const owned = state.ownedCounts || {};
+
+      Object.keys(owned).forEach(typeId => {
+        const qty = owned[typeId] || 0;
+        const catItem = MODULAR_CATALOG.find(c => c.id === typeId);
+        if (!catItem || qty <= 0) return;
+
+        for (let i = 0; i < qty; i++) {
+          let x = 330 + ((zCounter * 85) % 420);
+          let y = catItem.id === 'toy_disco' ? 110 : catItem.cat === 'blankets' ? 260 : 410 - (i * 22);
+          newLayout.push({
+            uid: 'p_' + Date.now() + '_' + zCounter,
+            typeId,
+            x,
+            y,
+            rot: 0,
+            scale: 1.0,
+            flip: 1,
+            colorIdx: (catItem.defaultColor + i) % FABRIC_PALETTES.length,
+            z: zCounter++
+          });
+        }
+      });
+
+      state.placedPieces = newLayout;
+      selectedPieceUid = null;
+      saveState();
+      renderFortSandbox();
+      renderInventoryDock();
+    }
+
+    function clearAllPlacedFortItems() {
+      playSound('tap');
+      state.placedPieces = [];
+      selectedPieceUid = null;
+      saveState();
+      renderFortSandbox();
+      renderInventoryDock();
+    }
+
+    /*************************************************************************
+     * 13. CATEGORIZED INVENTORY DOCK (SCARCITY ECONOMY + STREAK VAULT)
+     *************************************************************************/
+    function setInventoryCategory(catId) {
+      playSound('tap');
+      currentInventoryCat = catId;
+      ['cushions', 'blankets', 'pillows', 'streak', 'props'].forEach(c => {
+        const btn = document.getElementById(`cat-btn-${c}`);
+        if (!btn) return;
+        if (c === catId) {
+          btn.className = 'px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-amber-400 text-slate-950 shadow';
+        } else if (c === 'streak') {
+          btn.className = 'px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-gradient-to-r from-rose-600/80 to-amber-500/80 text-white border border-amber-300/50 shadow';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:text-white';
+        }
+      });
+      renderInventoryDock();
+    }
+
+    function renderInventoryDock() {
+      const grid = document.getElementById('inventory-dock-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const items = MODULAR_CATALOG.filter(item => item.cat === currentInventoryCat);
+      items.forEach(item => {
+        const blueprintUnlocked = isItemBlueprintUnlocked(item);
+        const ownedCount = state.ownedCounts[item.id] || 0;
+        const placedCount = state.placedPieces.filter(p => p.typeId === item.id).length;
+        const maxCap = getEffectiveMaxCap(item);
+        const canPlaceFromStock = placedCount < ownedCount;
+        const canBuyMore = blueprintUnlocked && ownedCount < maxCap && state.stars >= item.cost;
+
+        let buttonLabel = '';
+        let buttonClass = '';
+
+        if (!blueprintUnlocked) {
+          buttonLabel = `🔒 Locked (${item.tierLabel})`;
+          buttonClass = 'bg-slate-900 text-rose-300 border border-rose-500/40 cursor-not-allowed';
+        } else if (canPlaceFromStock) {
+          buttonLabel = `➕ Place in Fort (${ownedCount - placedCount} in tray)`;
+          buttonClass = 'bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 shadow';
+        } else if (ownedCount < maxCap) {
+          buttonLabel = `🛒 Buy +1 (${item.cost} ⭐)`;
+          buttonClass = state.stars >= item.cost
+            ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow'
+            : 'bg-slate-800 text-slate-400 cursor-not-allowed';
+        } else {
+          buttonLabel = `✓ Max Owned (${maxCap}/${maxCap})`;
+          buttonClass = 'bg-slate-800 text-emerald-300 cursor-not-allowed';
+        }
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border-2 flex flex-col justify-between transition ${
+          !blueprintUnlocked
+            ? 'bg-slate-950/90 border-rose-500/30'
+            : canPlaceFromStock
+            ? 'bg-emerald-950/30 border-emerald-400/70 hover:border-emerald-300'
+            : canBuyMore
+            ? 'bg-slate-800/90 border-amber-400/70 hover:border-amber-300'
+            : 'bg-slate-900/75 border-slate-800'
+        }`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-1.5">
+              <span class="text-2xl bg-slate-950/80 w-10 h-10 rounded-xl flex items-center justify-center border border-slate-700">${item.icon}</span>
+              <div class="text-right">
+                ${
+                  item.tierLabel
+                    ? `<div class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-400/30 mb-0.5">${item.tierLabel}</div>`
+                    : ''
+                }
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-950 text-amber-300 border border-slate-700">
+                  In Fort: ${placedCount}/${ownedCount} (Max ${maxCap})
+                </span>
+              </div>
+            </div>
+            <h4 class="font-heading font-bold text-xs sm:text-sm text-white leading-tight">${item.name}</h4>
+            <p class="text-[11px] text-slate-300 leading-snug mt-0.5 mb-2.5">${item.desc}</p>
+          </div>
+          <button class="w-full py-2 px-2 rounded-xl font-heading font-bold text-[11px] sm:text-xs transition btn-3d ${buttonClass}">
+            ${buttonLabel}
+          </button>
+        `;
+
+        card.querySelector('button').onclick = () => handleInventoryItemClick(item);
+        grid.appendChild(card);
+      });
+    }
+
+    function handleInventoryItemClick(item) {
+      const blueprintUnlocked = isItemBlueprintUnlocked(item);
+      if (!blueprintUnlocked) {
+        playSound('wrong');
+        return;
+      }
+
+      const ownedCount = state.ownedCounts[item.id] || 0;
+      const placedCount = state.placedPieces.filter(p => p.typeId === item.id).length;
+      const maxCap = getEffectiveMaxCap(item);
+
+      if (placedCount < ownedCount) {
+        playSound(item.id === 'toy_trampoline' ? 'boing' : item.id === 'toy_slide' ? 'slide' : 'plop');
+        spawnPieceOnStage(item);
+        return;
+      }
+
+      if (ownedCount >= maxCap) {
+        playSound('wrong');
+        return;
+      }
+
+      if (state.stars < item.cost) {
+        playSound('wrong');
+        return;
+      }
+
+      state.stars -= item.cost;
+      state.ownedCounts[item.id] = ownedCount + 1;
+      playSound('unlock');
+      launchConfetti(25);
+      spawnPieceOnStage(item);
+    }
+
+    function spawnPieceOnStage(item) {
+      const maxZ = state.placedPieces.reduce((m, p) => Math.max(m, p.z || 0), 0);
+      const jitterX = Math.floor((Math.random() - 0.5) * 90);
+      const jitterY = Math.floor((Math.random() - 0.5) * 35);
+
+      let defaultY = 400 + jitterY;
+      if (item.id === 'toy_disco') defaultY = 105;
+      else if (item.id === 'light_fairy' || item.id === 'blanket_canopy') defaultY = 230 + jitterY;
+
+      const newPiece = {
+        uid: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+        typeId: item.id,
+        x: 500 + jitterX,
+        y: defaultY,
+        rot: 0,
+        scale: 1.0,
+        flip: 1,
+        colorIdx: item.defaultColor ?? 0,
+        z: maxZ + 1
+      };
+
+      state.placedPieces.push(newPiece);
+      selectedPieceUid = newPiece.uid;
+
+      saveState();
+      renderFortSandbox();
+      renderInventoryDock();
+    }
+
+    /*************************************************************************
+     * 14. CERTIFICATE VIEW & PRESTIGE ITERATION UPGRADE SYSTEM
+     *************************************************************************/
+    function renderCertificateView() {
+      const allDone = [1, 2, 3, 4].every(r => state.badgesEarned[r] || getRegionCompletionStats(r).isComplete);
+      const banner = document.getElementById('cert-locked-banner');
+
+      if (allDone) {
+        banner.classList.add('hidden');
+      } else {
+        banner.classList.remove('hidden');
+        const list = document.getElementById('cert-badge-checklist');
+        list.innerHTML = '';
+        REGIONS_META.forEach(reg => {
+          const done = state.badgesEarned[reg.id] || getRegionCompletionStats(reg.id).isComplete;
+          const d = document.createElement('div');
+          d.className = `p-3 rounded-2xl border-2 ${
+            done ? 'bg-emerald-950/60 border-emerald-400 text-emerald-200' : 'bg-slate-800 border-slate-700 text-slate-400'
+          }`;
+          d.innerHTML = `
+            <div class="text-2xl mb-1">${reg.icon}</div>
+            <div class="font-heading font-bold text-xs text-white">${reg.title}</div>
+            <div class="text-[11px] font-bold mt-0.5">${done ? '✓ Mastered!' : 'In Progress'}</div>
+          `;
+          list.appendChild(d);
+        });
+      }
+
+      document.getElementById('cert-student-name').textContent = state.playerName || 'Architect Explorer';
+      document.getElementById('cert-date').textContent = new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      document.getElementById('cert-piece-count').textContent = state.placedPieces.length;
+      document.getElementById('cert-accuracy-stat').textContent = `${getOverallAccuracyPercent()}%`;
+      document.getElementById('cert-prestige-count').textContent = `#${state.prestigeCount}`;
+
+      const snapSvg = document.getElementById('cert-fort-snapshot-svg');
+      if (snapSvg) {
+        const sorted = [...state.placedPieces].sort((a, b) => (a.z || 0) - (b.z || 0));
+        const piecesMarkup = sorted
+          .map(
+            p => `
+            <g transform="translate(${p.x}, ${p.y}) rotate(${p.rot || 0}) scale(${(p.scale || 1) * (p.flip || 1)}, ${p.scale || 1})">
+              ${getPieceArtworkSVG(p)}
+            </g>
+          `
+          )
+          .join('');
+        snapSvg.innerHTML = renderRoomBackgroundSVG() + piecesMarkup;
+      }
+    }
+
+    function triggerCelebrationFanfare() {
+      playSound('fanfare');
+      launchConfetti(140);
+    }
+
+    function startNewFortSeason() {
+      playSound('fanfare');
+      launchConfetti(110);
+
+      state.prestigeCount = (state.prestigeCount || 1) + 1;
+      state.stars += 40;
+      state.streak = 0;
+      state.progress = { 1: {}, 2: {}, 3: {}, 4: {} };
+      state.regionStats = { 1: { ans: 0, cor: 0 }, 2: { ans: 0, cor: 0 }, 3: { ans: 0, cor: 0 }, 4: { ans: 0, cor: 0 } };
+      state.badgesEarned = { 1: false, 2: false, 3: false, 4: false };
+
+      if (state.prestigeCount >= 2) {
+        if (!state.unlockedVaultIds.includes('toy_throne')) {
+          state.unlockedVaultIds.push('toy_throne');
+          state.ownedCounts['toy_throne'] = Math.max(1, state.ownedCounts['toy_throne'] || 0);
+        }
+        if (!state.unlockedVaultIds.includes('toy_projector')) {
+          state.unlockedVaultIds.push('toy_projector');
+        }
+      }
+
+      ensureProgressStructure();
+      saveState();
+      updateHeaderUI();
+      switchTopTab('studio');
+    }
+
+    /*************************************************************************
+     * 15. STUDENT NAME & STUDY SHEET MODALS
+     *************************************************************************/
+    function openNameModal() {
+      playSound('tap');
+      const modal = document.getElementById('name-modal');
+      const input = document.getElementById('player-name-input');
+      input.value = state.hasSetName ? state.playerName : '';
+      modal.classList.remove('hidden');
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function savePlayerName() {
+      const input = document.getElementById('player-name-input');
+      const val = input.value.trim();
+      state.playerName = val.length > 0 ? val : 'Explorer';
+      state.hasSetName = true;
+      saveState();
+      playSound('unlock');
+      document.getElementById('name-modal').classList.add('hidden');
+      updateHeaderUI();
+      if (activeTopTab === 'studio') renderFortSandbox();
+    }
+
+    function openStudyGuideModal() {
+      playSound('tap');
+      const container = document.getElementById('study-sheet-content');
+      container.innerHTML = '';
+
+      [3, 1, 2].forEach(regId => {
+        const reg = REGIONS_META.find(r => r.id === regId);
+        const sec = document.createElement('div');
+        sec.className = 'bg-slate-800/80 border border-slate-700 rounded-2xl p-4';
+        const rows = reg.stateIds
+          .map(sid => {
+            const st = STATES_DATA.find(s => s.id === sid);
+            return `
+              <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <span class="font-heading font-bold text-amber-300 text-sm sm:text-base">${st.capital}</span>
+                  <span class="text-slate-400 text-xs"> is the capital of </span>
+                  <span class="font-heading font-bold text-white text-sm sm:text-base">${st.name} (${st.id})</span>
+                </div>
+                <div class="text-xs text-indigo-200 italic">💡 ${st.hint}</div>
+              </div>
+            `;
+          })
+          .join('');
+
+        sec.innerHTML = `
+          <div class="flex items-center gap-2 mb-2.5">
+            <span class="text-xl">${reg.icon}</span>
+            <h4 class="font-heading font-bold text-base text-white">${reg.title}</h4>
+          </div>
+          <div class="space-y-2">${rows}</div>
+        `;
+        container.appendChild(sec);
+      });
+
+      document.getElementById('study-modal').classList.remove('hidden');
+    }
+
+    function closeStudyGuideModal() {
+      playSound('tap');
+      document.getElementById('study-modal').classList.add('hidden');
+    }
+
+    /*************************************************************************
+     * 16. CONFETTI PARTICLE ENGINE
+     *************************************************************************/
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimId = null;
+
+    function resizeConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+
+    function launchConfetti(count = 80) {
+      resizeConfetti();
+      const colors = ['#fbbf24', '#34d399', '#60a5fa', '#f472b6', '#a78bfa', '#f87171'];
+      for (let i = 0; i < count; i++) {
+        confettiParticles.push({
+          x: window.innerWidth * (0.2 + Math.random() * 0.6),
+          y: window.innerHeight * 0.35,
+          vx: (Math.random() - 0.5) * 16,
+          vy: -Math.random() * 14 - 4,
+          size: Math.random() * 8 + 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          gravity: 0.34
+        });
+      }
+      if (!confettiAnimId) animateConfetti();
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.rotation += p.vRot;
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rotation * Math.PI) / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+        confettiCtx.restore();
+      });
+
+      confettiParticles = confettiParticles.filter(p => p.y < confettiCanvas.height + 30);
+      if (confettiParticles.length > 0) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimId = null;
+      }
+    }
+
+    /*************************************************************************
+     * 17. INITIALIZE APPLICATION ON LOAD
+     *************************************************************************/
+    window.onload = function () {
+      loadState();
+
+      STATES_DATA.forEach(st => {
+        const el = document.getElementById(`state-${st.id}`);
+        if (el) {
+          el.addEventListener('click', e => {
+            e.stopPropagation();
+            handleStateTap(st.id);
+          });
+        }
+      });
+
+      window.addEventListener('pointermove', handleGlobalPointerMove);
+      window.addEventListener('pointerup', handleGlobalPointerUp);
+      window.addEventListener('pointercancel', handleGlobalPointerUp);
+
+      document.getElementById('player-name-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') savePlayerName();
+      });
+
+      updateHeaderUI();
+      updateLightingButtonUI();
+      renderRegionSelectorBar();
+      generateNextQuestion();
+
+      if (!state.hasSetName) {
+        openNameModal();
+      }
+    };
+  </script>
+</body>
+</html>
