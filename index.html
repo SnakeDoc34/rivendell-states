@@ -643,8 +643,8 @@
           </div>
           <div class="studio-orbit-controls" aria-label="3D camera and motion controls">
             <div class="studio-control-pair">
-              <button id="studio-mode-orbit" class="studio-control-active" onclick="setStudioInteractionMode('orbit')" aria-pressed="true">◎ Orbit</button>
-              <button id="studio-mode-move" onclick="setStudioInteractionMode('move')" aria-pressed="false">✥ Move pieces</button>
+              <button id="studio-mode-orbit" onclick="setStudioInteractionMode('orbit')" aria-pressed="false">◎ Orbit</button>
+              <button id="studio-mode-move" class="studio-control-active" onclick="setStudioInteractionMode('move')" aria-pressed="true">▤ Build & stack</button>
             </div>
             <button onclick="zoomStudio3D(-1.4)" aria-label="Zoom in">＋</button>
             <button onclick="zoomStudio3D(1.4)" aria-label="Zoom out">−</button>
@@ -653,11 +653,12 @@
             <button id="studio-rotate-btn" onclick="toggleStudioAutoRotate()" aria-pressed="true">◉ Auto swivel on</button>
             <button id="studio-motion-btn" onclick="toggleStudioMotion()" aria-pressed="true">✧ Motion on</button>
           </div>
-          <!-- 3D Height Controls for stacking cushions -->
-          <div class="absolute bottom-20 left-3 z-30 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-2xl p-2 flex items-center gap-2 shadow-xl">
-            <span class="text-xs font-bold text-amber-300">Selected piece:</span>
-            <button onclick="adjustSelected3DHeight(0.3)" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold btn-3d">⬆️ Lift Up</button>
-            <button onclick="adjustSelected3DHeight(-0.3)" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬇️ Lower</button>
+          <div id="studio-stack-actions" class="hidden absolute bottom-20 left-3 right-3 sm:right-auto z-30 bg-slate-900/95 backdrop-blur border border-emerald-300/40 rounded-2xl p-3 shadow-xl">
+            <div class="flex flex-wrap gap-2">
+              <button id="studio-stack-btn" onclick="beginStudioStackPlacement()" class="px-4 py-2.5 rounded-xl bg-emerald-300 text-slate-950 text-sm font-bold">▤ Stack onto…</button>
+              <button onclick="placeSelectedStudioPieceOnFloor()" class="px-4 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-bold">▱ Place on floor</button>
+            </div>
+            <p id="studio-stack-status" role="status" aria-live="polite" class="mt-2 max-w-sm text-xs text-emerald-100">Drag onto another cushion, or tap Stack onto… and choose a cushion.</p>
           </div>
         </div>
       </div>
@@ -2270,6 +2271,7 @@
     }
 
     function updateInspectorBarUI() {
+      updateStudioStackControls();
       const bar = document.getElementById('fort-inspector-bar');
       if (!selectedPieceUid) {
         bar.classList.add('hidden');
@@ -2533,6 +2535,8 @@
 
       saveState();
       renderFortSandbox();
+      const root=studioRootFor(newPiece.uid);
+      if(root&&isStudioStackable(newPiece)){commitStudioStackLanding(root,findStudioStackLanding(root,root.position.x,root.position.z));renderFortSandbox();}
       renderInventoryDock();
     }
 
@@ -2659,7 +2663,7 @@
     let isStudio3DActive = false, studioViewPreference = '3d';
     let cameraOrbitAngle = 0.42, cameraOrbitPitch = 0.48, cameraOrbitRadius = 14.4;
     let orbitTargetAngle = 0.42, orbitTargetPitch = 0.48, orbitTargetRadius = 14.4;
-    let studioAutoRotate = true, studioInteractionMode = 'orbit', studioMotion = true;
+    let studioAutoRotate = false, studioInteractionMode = 'move', studioMotion = true;
     let isOrbitDragging = false, active3DDragObject = null, threeDragOffset = null;
     let threeRaycaster = null, threeMouse = null, threePlane = null, threeSceneSignature = null;
     let threePreviousTime = 0, threeElapsed = 0, threeSelectionRing = null;
@@ -2965,6 +2969,8 @@
       buildStudioRoom();threeFortGroup=new THREE.Group();threeScene.add(threeFortGroup);
       threeSelectionRing=studioMesh(new THREE.TorusGeometry(0.85,0.018,6,64),new THREE.MeshBasicMaterial({color:0xffdd91,transparent:true,opacity:0.85}),threeScene);
       threeSelectionRing.rotation.x=Math.PI/2;threeSelectionRing.visible=false;threeSelectionRing.castShadow=false;
+      threeStackPreview=studioMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x75efbe,transparent:true,opacity:0.32,depthWrite:false,side:THREE.DoubleSide}),threeScene);
+      threeStackPreview.rotation.x=-Math.PI/2;threeStackPreview.visible=false;threeStackPreview.castShadow=false;threeStackPreview.receiveShadow=false;
       attachStudioPointers(host);attachStudioPointers(document.getElementById('studio-3d-canvas-host'));
       window.addEventListener('resize',resizeThreeJSViewports);
       if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(resizeThreeJSViewports);observer.observe(host);observer.observe(document.getElementById('studio-3d-canvas-host'));}
@@ -2985,11 +2991,12 @@
     }
     function setStudio3DView(enabled) {
       isStudio3DActive=!!enabled&&!!threeRenderer;
+      if(!isStudio3DActive)activeStackPieceUid=null;
       document.getElementById('studio-3d-viewport').classList.toggle('hidden',!isStudio3DActive);
       document.getElementById('studio-camera-controls').classList.toggle('hidden',isStudio3DActive);
       document.getElementById('toggle-3d-studio-label').textContent=isStudio3DActive?'Open 2D Builder':'Open 3D Studio';
       document.getElementById('studio-view-caption').textContent=isStudio3DActive?'REAL-TIME 3D • 360° ROOM':'2D FORT BUILDER';
-      mountStudioRenderer();updateStudioControls();
+      mountStudioRenderer();updateStudioControls();updateStudioStackControls();
     }
     function toggleStudio3DView() {
       if(!threeRenderer)return;playSound('tap');studioViewPreference=isStudio3DActive?'2d':'3d';setStudio3DView(studioViewPreference==='3d');
@@ -2998,10 +3005,10 @@
       for(const mode of ['orbit','move']){const b=document.getElementById('studio-mode-'+mode);if(b){b.classList.toggle('studio-control-active',studioInteractionMode===mode);b.setAttribute('aria-pressed',String(studioInteractionMode===mode));}}
       const rotate=document.getElementById('studio-rotate-btn');if(rotate){rotate.textContent=studioAutoRotate?'◉ Auto swivel on':'◉ Auto swivel off';rotate.setAttribute('aria-pressed',String(studioAutoRotate));}
       const motion=document.getElementById('studio-motion-btn');if(motion){motion.textContent=studioMotion?'✧ Motion on':'✧ Motion off';motion.setAttribute('aria-pressed',String(studioMotion));}
-      const hint=document.getElementById('studio-gesture-hint');if(hint)hint.textContent=studioInteractionMode==='move'?'Drag a piece to place it. Pinch or use + / − to zoom.':'Drag to orbit 360°. Tap a piece to select it. Pinch to zoom.';
+      const hint=document.getElementById('studio-gesture-hint');if(hint)hint.textContent=activeStackPieceUid?'Tap another cushion to stack your selected cushion on top.':studioInteractionMode==='move'?'Drag a cushion onto another cushion. Release to stack. Drag the empty room to turn.':'Drag to orbit 360°. Tap a cushion to select it. Use Build & stack to move it.';
     }
     function setStudioInteractionMode(mode) {
-      studioInteractionMode=mode;if(mode==='move')studioAutoRotate=false;updateStudioControls();
+      activeStackPieceUid=null;studioInteractionMode=mode;if(mode==='move')studioAutoRotate=false;updateStudioControls();updateStudioStackControls();
     }
     function toggleStudioAutoRotate() {studioAutoRotate=!studioAutoRotate;updateStudioControls();}
     function toggleStudioMotion() {studioMotion=!studioMotion;if(!studioMotion)studioAutoRotate=false;updateStudioControls();}
@@ -3014,14 +3021,141 @@
       const hits=threeRaycaster.intersectObjects(threeFortGroup.children,true);if(!hits.length)return null;
       let obj=hits[0].object;while(obj.parent&&obj.parent!==threeFortGroup)obj=obj.parent;return obj;
     }
+    // Cushions are supported by a surface, rather than an arbitrary height value.
+    const STUDIO_STACK_TYPES = new Set(['cush_square','cush_lean','cush_pillar','pillow_throw','pillow_pouf','pillow_bolster','pillow_star','supp_books','supp_box']);
+    const STUDIO_FLOOR_Y = 0.075;
+    let threeStackPreview = null, activeStackPieceUid = null, activeStackLanding = null;
+    function isStudioStackable(piece) { return !!piece && STUDIO_STACK_TYPES.has(piece.typeId); }
+    function studioRootFor(uid) { return threeFortGroup?.children.find(root=>root.userData.uid===uid)||null; }
+    function studioStackDescendants(uid) {
+      const found = new Set([uid]);
+      for(let pass=0;pass<state.placedPieces.length;pass++){
+        let added=false;state.placedPieces.forEach(p=>{if(p.supportUid&&found.has(p.supportUid)&&!found.has(p.uid)){found.add(p.uid);added=true;}});
+        if(!added)break;
+      }
+      return found;
+    }
+    function studioPieceBounds(root, position=root.position) {
+      const scale=root.userData.scale||1;
+      const matrix=new THREE.Matrix4().compose(position,root.quaternion,new THREE.Vector3(scale*(root.userData.flip||1),scale,scale));
+      return root.userData.localBounds.clone().applyMatrix4(matrix);
+    }
+    function studioRelativeBounds(root) { return studioPieceBounds(root,new THREE.Vector3()); }
+    function studioFootprintsOverlap(a,b) {
+      return Math.max(0,Math.min(a.max.x,b.max.x)-Math.max(a.min.x,b.min.x))*Math.max(0,Math.min(a.max.z,b.max.z)-Math.max(a.min.z,b.min.z));
+    }
+    function settleStudioStacks() {
+      if(!threeFortGroup)return;
+      const pieces=new Map(state.placedPieces.map(p=>[p.uid,p])),resolved=new Set(),visiting=new Set();
+      const settle=root=>{
+        if(resolved.has(root.userData.uid))return;
+        const p=pieces.get(root.userData.uid);if(!isStudioStackable(p)){resolved.add(p?.uid);return;}
+        if(root===active3DDragObject){resolved.add(p.uid);return;}
+        if(visiting.has(p.uid)){p.supportUid=null;return;}
+        visiting.add(p.uid);
+        let parent=p.supportUid?studioRootFor(p.supportUid):null;
+        if(parent&&parent!==root&&!visiting.has(parent.userData.uid)&&isStudioStackable(pieces.get(parent.userData.uid))){
+          settle(parent);
+          root.position.x=parent.position.x+(Number.isFinite(p.stackOffsetX)?p.stackOffsetX:0);
+          root.position.z=parent.position.z+(Number.isFinite(p.stackOffsetZ)?p.stackOffsetZ:0);
+          const parentBounds=studioPieceBounds(parent),childBounds=studioPieceBounds(root);
+          if(studioFootprintsOverlap(parentBounds,childBounds)>0.03){
+            root.position.y=parentBounds.max.y-studioRelativeBounds(root).min.y;
+          }else{parent=null;p.supportUid=null;}
+        }else{parent=null;p.supportUid=null;}
+        if(!parent)root.position.y=STUDIO_FLOOR_Y-studioRelativeBounds(root).min.y;
+        p.x=Math.round(500+root.position.x/5.5*500);p.depth3d=root.position.z;
+        visiting.delete(p.uid);resolved.add(p.uid);
+      };
+      threeFortGroup.children.forEach(settle);
+    }
+    function findStudioStackLanding(root,x,z) {
+      const excluded=studioStackDescendants(root.userData.uid),relative=studioRelativeBounds(root);
+      const proposed=studioPieceBounds(root,new THREE.Vector3(x,0,z));let best=null;
+      threeFortGroup.children.forEach(other=>{
+        const p=state.placedPieces.find(p=>p.uid===other.userData.uid);
+        if(excluded.has(other.userData.uid)||!isStudioStackable(p))return;
+        const bounds=studioPieceBounds(other),overlap=studioFootprintsOverlap(proposed,bounds);
+        const area=Math.min((proposed.max.x-proposed.min.x)*(proposed.max.z-proposed.min.z),(bounds.max.x-bounds.min.x)*(bounds.max.z-bounds.min.z));
+        if(overlap<area*0.23||overlap<0.025)return;
+        if(!best||bounds.max.y>best.top){
+          const insetX=(bounds.max.x-bounds.min.x)*0.26,insetZ=(bounds.max.z-bounds.min.z)*0.26;
+          best={supportUid:p.uid,top:bounds.max.y,x:studioClamp(x,bounds.min.x+insetX,bounds.max.x-insetX),z:studioClamp(z,bounds.min.z+insetZ,bounds.max.z-insetZ)};
+        }
+      });
+      if(!best)best={supportUid:null,top:STUDIO_FLOOR_Y,x,z};
+      best.y=best.top-relative.min.y;return best;
+    }
+    function showStudioStackLanding(root,landing) {
+      if(!threeStackPreview)return;
+      const relative=studioRelativeBounds(root);threeStackPreview.visible=true;
+      threeStackPreview.position.set(landing.x,landing.top+0.025,landing.z);
+      threeStackPreview.scale.set((relative.max.x-relative.min.x)*1.12,(relative.max.z-relative.min.z)*1.12,1);
+      threeStackPreview.material.color.set(landing.supportUid?0x75efbe:0xf3d59a);
+      const support=state.placedPieces.find(p=>p.uid===landing.supportUid),name=MODULAR_CATALOG.find(i=>i.id===support?.typeId)?.name;
+      const status=document.getElementById('studio-stack-status');if(status)status.textContent=name?`Stack on ${name} — release to place.`:'Floor — release to place.';
+    }
+    function commitStudioStackLanding(root,landing) {
+      const p=state.placedPieces.find(p=>p.uid===root.userData.uid);if(!p)return;
+      const parent=landing.supportUid?studioRootFor(landing.supportUid):null;
+      p.supportUid=parent?parent.userData.uid:null;
+      p.stackOffsetX=parent?landing.x-parent.position.x:0;p.stackOffsetZ=parent?landing.z-parent.position.z:0;
+      p.x=Math.round(500+landing.x/5.5*500);p.depth3d=landing.z;root.position.set(landing.x,landing.y,landing.z);
+      settleStudioStacks();threeSceneSignature=null;syncThreeJSFortScene();saveState();
+      if(threeStackPreview)threeStackPreview.visible=false;activeStackLanding=null;
+      const status=document.getElementById('studio-stack-status');if(status)status.textContent=parent?'Stacked! Move the base to move the whole stack.':'Placed on the floor.';
+      updateStudioStackControls();
+    }
+    function updateStudioStackControls() {
+      if(activeStackPieceUid&&!state.placedPieces.some(p=>p.uid===activeStackPieceUid))activeStackPieceUid=null;
+      const p=state.placedPieces.find(p=>p.uid===selectedPieceUid),canStack=isStudioStackable(p)&&!!threeRenderer;
+      const controls=document.getElementById('studio-stack-actions');if(controls)controls.classList.toggle('hidden',!canStack||!isStudio3DActive);
+      const button=document.getElementById('studio-stack-btn');if(button)button.textContent=activeStackPieceUid?'Cancel stacking':'▤ Stack onto…';
+    }
+    function beginStudioStackPlacement() {
+      if(activeStackPieceUid){activeStackPieceUid=null;updateStudioControls();updateStudioStackControls();document.getElementById('studio-stack-status').textContent='Drag onto another cushion, or tap Stack onto… and choose a cushion.';return;}
+      const p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(!isStudioStackable(p))return;
+      activeStackPieceUid=p.uid;studioAutoRotate=false;
+      updateStudioControls();updateStudioStackControls();
+      document.getElementById('studio-stack-status').textContent='Now tap another cushion. Your selected cushion will sit on top.';
+    }
+    function stackStudioPieceOnto(targetUid) {
+      const root=studioRootFor(activeStackPieceUid||selectedPieceUid),target=studioRootFor(targetUid);
+      const targetPiece=state.placedPieces.find(p=>p.uid===targetUid);
+      if(!root||!target||!isStudioStackable(targetPiece)||studioStackDescendants(root.userData.uid).has(targetUid))return false;
+      const p=state.placedPieces.find(p=>p.uid===root.userData.uid);p.rot=0;root.rotation.z=0;
+      const landing=findStudioStackLanding(root,target.position.x,target.position.z);
+      if(!landing.supportUid)return false;
+      selectedPieceUid=p.uid;activeStackPieceUid=null;commitStudioStackLanding(root,landing);playSound('plop');renderFortSandbox();updateStudioControls();return true;
+    }
+    function placeSelectedStudioPieceOnFloor() {
+      const root=studioRootFor(selectedPieceUid),p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(!root||!isStudioStackable(p))return;
+      const excluded=studioStackDescendants(p.uid);let landing=null;
+      for(let ring=0;ring<20&&!landing;ring++)for(let angle=0;angle<(ring?12:1);angle++){
+        const x=root.position.x+Math.cos(angle*Math.PI/6)*ring*0.30,z=root.position.z+Math.sin(angle*Math.PI/6)*ring*0.30;
+        if(Math.hypot(x,z)>6.2)continue;
+        const box=studioPieceBounds(root,new THREE.Vector3(x,0,z));
+        const occupied=threeFortGroup.children.some(other=>!excluded.has(other.userData.uid)&&isStudioStackable(state.placedPieces.find(p=>p.uid===other.userData.uid))&&studioFootprintsOverlap(box,studioPieceBounds(other))>0.025);
+        if(!occupied){landing={x,z,top:STUDIO_FLOOR_Y,supportUid:null,y:STUDIO_FLOOR_Y-studioRelativeBounds(root).min.y};break;}
+      }
+      if(!landing){document.getElementById('studio-stack-status').textContent='Make some clear floor space, then try again.';return;}
+      activeStackPieceUid=null;commitStudioStackLanding(root,landing);playSound('plop');renderFortSandbox();updateStudioControls();
+    }
+
     function attachStudioPointers(el) {
       if(!el)return;
       el.addEventListener('pointerdown',e=>{
         if(e.button!==undefined&&e.button!==0)return;e.preventDefault();el.setPointerCapture(e.pointerId);
         studioPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-        if(studioPointers.size===2){const a=[...studioPointers.values()];pinchDistance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pinchRadius=orbitTargetRadius;
-          if(active3DDragObject){saveState();syncThreeJSFortScene();}active3DDragObject=null;pointerStart=null;return;}
+        if(studioPointers.size===2){
+          const a=[...studioPointers.values()];pinchDistance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pinchRadius=orbitTargetRadius;
+          const dragged=active3DDragObject;active3DDragObject=null;
+          if(dragged&&activeStackLanding)commitStudioStackLanding(dragged,activeStackLanding);
+          else if(dragged){saveState();syncThreeJSFortScene();}
+          if(threeStackPreview)threeStackPreview.visible=false;pointerStart=null;return;
+        }
         pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,el};isOrbitDragging=true;
+        if(activeStackPieceUid)return;
         if(activeTopTab==='studio'&&isStudio3DActive&&studioInteractionMode==='move'){
           const obj=pickStudioObject(el,e.clientX,e.clientY);selectedPieceUid=obj?.userData.uid||null;updateInspectorBarUI();
           if(obj){active3DDragObject=obj;threePlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0,1,0),obj.position);
@@ -3035,26 +3169,42 @@
         if(!pointerStart||pointerStart.id!==e.pointerId)return;
         const dx=e.clientX-pointerStart.lastX,dy=e.clientY-pointerStart.lastY;pointerStart.lastX=e.clientX;pointerStart.lastY=e.clientY;
         if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>5)pointerStart.moved=true;
-        if(active3DDragObject){const r=el.getBoundingClientRect();threeMouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);threeRaycaster.setFromCamera(threeMouse,threeCamera);
+        if(active3DDragObject){
+          if(!pointerStart.moved)return;
+          const r=el.getBoundingClientRect();threeMouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);threeRaycaster.setFromCamera(threeMouse,threeCamera);
           const hit=new THREE.Vector3();if(!threeRaycaster.ray.intersectPlane(threePlane,hit))return;hit.add(threeDragOffset);
-          active3DDragObject.position.x=studioClamp(hit.x,-6.2,6.2);active3DDragObject.position.z=studioClamp(hit.z,-4.9,4.9);
-          const p=state.placedPieces.find(p=>p.uid===active3DDragObject.userData.uid);if(p){p.x=Math.round(500+active3DDragObject.position.x/5.5*500);p.depth3d=active3DDragObject.position.z;}
+          const radius=Math.hypot(hit.x,hit.z);if(radius>6.2){hit.x*=6.2/radius;hit.z*=6.2/radius;}
+          const p=state.placedPieces.find(p=>p.uid===active3DDragObject.userData.uid);
+          if(isStudioStackable(p)){
+            p.supportUid=null;activeStackLanding=findStudioStackLanding(active3DDragObject,hit.x,hit.z);
+            active3DDragObject.position.set(activeStackLanding.x,activeStackLanding.y,activeStackLanding.z);
+            showStudioStackLanding(active3DDragObject,activeStackLanding);
+          }else{active3DDragObject.position.x=studioClamp(hit.x,-6.2,6.2);active3DDragObject.position.z=studioClamp(hit.z,-4.9,4.9);}
+          if(p){p.x=Math.round(500+active3DDragObject.position.x/5.5*500);p.depth3d=active3DDragObject.position.z;}
+          settleStudioStacks();
         }else{orbitTargetAngle-=dx*0.007;orbitTargetPitch=studioClamp(orbitTargetPitch+dy*0.006,0.12,1.35);}
       });
       const release=e=>{
         if(!studioPointers.has(e.pointerId))return;studioPointers.delete(e.pointerId);
-        if(pointerStart?.id===e.pointerId&&!pointerStart.moved&&activeTopTab==='studio'&&isStudio3DActive&&e.type!=='pointercancel'){
-          const obj=pickStudioObject(el,e.clientX,e.clientY);selectedPieceUid=obj?.userData.uid||null;updateInspectorBarUI();
+        const wasTap=pointerStart?.id===e.pointerId&&!pointerStart.moved&&e.type!=='pointercancel'&&e.type!=='lostpointercapture';
+        const dragged=active3DDragObject,landing=activeStackLanding;
+        active3DDragObject=null;activeStackLanding=null;pointerStart=null;isOrbitDragging=studioPointers.size>0;
+        if(wasTap&&activeTopTab==='studio'&&isStudio3DActive){
+          const obj=pickStudioObject(el,e.clientX,e.clientY);
+          if(activeStackPieceUid){if(!obj||!stackStudioPieceOnto(obj.userData.uid))document.getElementById('studio-stack-status').textContent='Tap a different cushion to stack on it.';return;}
+          selectedPieceUid=obj?.userData.uid||null;updateInspectorBarUI();
           const p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(p&&MODULAR_CATALOG.find(c=>c.id===p.typeId)?.isInteractiveToy)triggerStudioToy(p.uid);
         }
-        const moved=!!active3DDragObject;active3DDragObject=null;pointerStart=null;isOrbitDragging=studioPointers.size>0;
-        if(moved){saveState();renderFortSandbox();}
+        if(dragged&&landing)commitStudioStackLanding(dragged,landing);
+        else if(dragged){saveState();renderFortSandbox();}
+        if(threeStackPreview)threeStackPreview.visible=false;
       };
       el.addEventListener('pointerup',release);el.addEventListener('pointercancel',release);el.addEventListener('lostpointercapture',release);
       el.addEventListener('wheel',e=>{e.preventDefault();zoomStudio3D(e.deltaY*0.012);},{passive:false});
     }
-    function adjustSelected3DHeight(delta) {
-      const p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(!p)return;p.y=studioClamp(p.y-Math.round(delta*80),80,480);saveState();renderFortSandbox();
+    function adjustSelected3DHeight() {
+      // Compatibility for earlier links: height is now determined by its support.
+      beginStudioStackPlacement();
     }
     function disposeStudioObject(object) {
       const geometries=new Set(),materials=new Set();object.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));});
@@ -3068,13 +3218,15 @@
         const appearance=JSON.stringify([p.typeId,p.colorIdx,p.typeId==='prop_sign'?state.playerName:'']);
         let root=existing.get(p.uid);existing.delete(p.uid);
         if(root&&root.userData.appearance!==appearance){disposeStudioObject(root);threeFortGroup.remove(root);root=null;}
-        if(!root){root=new THREE.Group();const model=buildStudioItem(p);root.add(model);root.userData={uid:p.uid,appearance,model,spawnAt:wasInitialized?threeElapsed:-100,pulseAt:-100};threeFortGroup.add(root);}
+        if(!root){root=new THREE.Group();const model=buildStudioItem(p);const localBounds=new THREE.Box3().setFromObject(model);root.add(model);root.userData={uid:p.uid,appearance,model,localBounds,spawnAt:wasInitialized?threeElapsed:-100,pulseAt:-100};threeFortGroup.add(root);}
         const floorOffset=root.userData.model.userData.floorOffset||0.3;
         root.position.set(studioClamp((p.x-500)/500*5.5,-6.2,6.2),floorOffset+Math.max(0,(400-p.y)/420*3.6),Number.isFinite(p.depth3d)?p.depth3d:-0.6+(idx%5)*0.42);
         root.rotation.z=-(p.rot||0)*Math.PI/180;root.userData.scale=p.scale||1;root.userData.flip=p.flip||1;
         root.scale.set((p.scale||1)*(p.flip||1),p.scale||1,p.scale||1);
       });
       existing.forEach(root=>{disposeStudioObject(root);threeFortGroup.remove(root);});threeFortGroup.userData.initialized=true;
+      settleStudioStacks();
+      threeSceneSignature=JSON.stringify([state.nightMode,state.playerName,state.placedPieces]);
       threeScene.background.set(state.nightMode?0x141d2c:0xa9bfd0);threeScene.fog.color.copy(threeScene.background);
       threeFillLight.intensity=state.nightMode?0.85:1.15;threeKeyLight.intensity=state.nightMode?1.8:2.2;
       threeRenderer.toneMappingExposure=state.nightMode?1.15:1.08;
@@ -3104,7 +3256,7 @@
           pos.needsUpdate=true;if(studioMotion&&Math.floor(t*20)%3===0)cloth.geometry.computeVertexNormals();}
       });
       const selected=threeFortGroup.children.find(g=>g.userData.uid===selectedPieceUid);threeSelectionRing.visible=!!selected&&activeTopTab==='studio';
-      if(selected){threeSelectionRing.position.set(selected.position.x,0.13,selected.position.z);threeSelectionRing.scale.setScalar((selected.userData.scale||1)*(1+(studioMotion?Math.sin(t*2)*0.035:0)));}
+      if(selected){threeSelectionRing.position.set(selected.position.x,studioPieceBounds(selected).min.y+0.02,selected.position.z);threeSelectionRing.scale.setScalar((selected.userData.scale||1)*(1+(studioMotion?Math.sin(t*2)*0.035:0)));}
       threeRenderer.render(threeScene,threeCamera);
     }
 
