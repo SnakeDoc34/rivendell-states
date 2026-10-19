@@ -210,6 +210,22 @@
       background: rgba(99, 102, 241, 0.65);
       border-radius: 8px;
     }
+
+    /* The studio is a full 3D stage; controls sit outside the object inspector. */
+    .studio-room-frame { height: clamp(420px, 66vh, 720px); border: 1px solid rgba(234,205,156,.36); }
+    .studio-room-heading { position: absolute; top: 24px; left: 26px; right: 20px; color: #f6eedf; text-shadow: 0 2px 12px #0c1525; }
+    .studio-room-heading > span { display: block; color: #e7c893; font-size: 10px; font-weight: 900; letter-spacing: .19em; margin-bottom: 5px; }
+    .studio-room-heading > strong { display: block; font-family: var(--font-heading); font-size: clamp(23px, 3vw, 35px); font-weight: 500; }
+    .studio-room-heading > p { margin: 5px 0 0; font-size: 12px; color: #d7e3e7; }
+    .studio-orbit-controls { position: absolute; z-index: 35; bottom: 14px; left: 14px; right: 14px; display: flex; align-items: center; gap: 7px; overflow-x: auto; padding: 8px; border: 1px solid #cfb37b50; border-radius: 18px; background: rgba(15,24,38,.87); backdrop-filter: blur(18px); box-shadow: 0 8px 30px #03071050; }
+    .studio-orbit-controls button { flex-shrink: 0; white-space: nowrap; border-radius: 11px; border: 1px solid transparent; padding: 10px 12px; min-height: 42px; color: #e6ecef; font-family: var(--font-body); font-weight: 800; font-size: 12px; transition: background .18s, color .18s; }
+    .studio-orbit-controls button:hover { background: #ffffff12; }
+    .studio-orbit-controls button:focus-visible, .studio-actions button:focus-visible { outline: 2px solid #f1ce88; outline-offset: 2px; }
+    .studio-control-pair { display:flex; flex-shrink:0; padding:3px; border-radius:14px; background:#050d1c80; }
+    .studio-orbit-controls .studio-control-active { color:#18212e; background:#ebd1a0; box-shadow:0 2px 8px #0003; }
+    .studio-actions button { min-height:40px; }
+    .studio-actions .rounded-full { min-width:32px; height:32px; min-height:32px; }
+    @media (max-width:640px) { .studio-room-heading { top:18px; left:18px; } .studio-room-heading > p { max-width:260px; line-height:1.5; } .studio-orbit-controls { left:8px;right:8px;bottom:8px; } }
   </style>
 </head>
 <body class="select-none sky-morning transition-colors duration-1000">
@@ -510,7 +526,7 @@
             <div class="relative w-full h-40 sm:h-44 rounded-2xl overflow-hidden border-2 border-indigo-400/40 bg-slate-950 shadow-inner">
               <div id="mini-3d-fort-container" class="w-full h-full touch-none cursor-grab active:cursor-grabbing"></div>
               <div class="absolute top-2 left-2.5 pointer-events-none bg-slate-900/80 backdrop-blur px-2.5 py-1 rounded-xl border border-slate-700 text-[10px] font-extrabold text-amber-300">
-                🧊 Live 3D Fort Diorama (Drag to Spin!)
+                ✦ Your living 3D fort · Drag to orbit
               </div>
               <button onclick="switchTopTab('studio')" class="absolute bottom-2 right-2.5 px-3 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading font-extrabold text-[11px] shadow btn-3d">
                 🏰 Customize in Studio →
@@ -529,14 +545,14 @@
           <div>
             <div class="flex items-center gap-2">
               <h2 class="text-base sm:text-xl font-bold text-white leading-tight">
-                <span id="studio-owner-name">Architect</span>'s Modular Fort Studio
+                <span id="studio-owner-name">Architect</span>'s Fort Studio
               </h2>
               <span id="studio-iteration-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40">
                 Build Iteration #1
               </span>
             </div>
             <p class="text-xs text-slate-300">
-              Zoom, pan, drag objects, and customize every cushion & blanket!
+              A cozy little world to build, explore, and make your own.
             </p>
           </div>
         </div>
@@ -566,8 +582,8 @@
         </div>
       </div>
 
-      <!-- MAIN LIVING ROOM CANVAS WITH ZOOM & PAN CONTROLS -->
-      <div class="relative w-full aspect-[16/9.6] sm:aspect-[16/8.6] rounded-3xl overflow-hidden border-4 border-amber-400/50 shadow-2xl bg-slate-950 select-none">
+      <!-- Shared 3D room and optional 2D builder -->
+      <div class="studio-room-frame relative w-full rounded-3xl overflow-hidden shadow-2xl bg-slate-950 select-none">
 
         <!-- ZOOM & PAN VIEWPORT CONTROLS BAR -->
         <div id="studio-camera-controls" class="absolute top-2.5 left-3 z-30 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-2xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-lg">
@@ -576,29 +592,6 @@
           <button onclick="zoomStudioCanvas(-0.15)" class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold btn-3d" title="Zoom Out">➖</button>
           <button onclick="resetStudioCamera()" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-200 text-xs font-bold btn-3d" title="Reset View">🎯 Reset</button>
           <button id="pan-mode-toggle" onclick="togglePanMode()" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold btn-3d" title="Toggle Pan Mode">🖐️ Pan: Off</button>
-        </div>
-
-        <!-- FLOATING INSPECTOR TOOLBAR -->
-        <div id="fort-inspector-bar" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 rounded-2xl px-3 py-2 shadow-2xl flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-[96%] w-max">
-          <span id="inspector-item-label" class="text-xs font-heading font-bold text-amber-300 mr-1 hidden sm:inline">Selected Piece</span>
-          <button id="inspector-play-btn" onclick="triggerSelectedPieceToyAction()" class="hidden px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-heading font-extrabold text-xs shadow btn-3d">🎉 Activate Toy!</button>
-          <button onclick="transformSelectedPiece('rotate', -15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↺ Tilt L</button>
-          <button onclick="transformSelectedPiece('rotate', 15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↻ Tilt R</button>
-          <button onclick="transformSelectedPiece('scale', -0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">➖ Smaller</button>
-          <button onclick="transformSelectedPiece('scale', 0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">➕ Bigger</button>
-          <button onclick="transformSelectedPiece('flip')" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↔️ Flip</button>
-          <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700">
-            <button onclick="setSelectedPieceColor(0)" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-white hover:scale-110 transition"></button>
-            <button onclick="setSelectedPieceColor(1)" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white hover:scale-110 transition"></button>
-            <button onclick="setSelectedPieceColor(2)" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-white hover:scale-110 transition"></button>
-            <button onclick="setSelectedPieceColor(3)" class="w-5 h-5 rounded-full bg-amber-400 border-2 border-white hover:scale-110 transition"></button>
-            <button onclick="setSelectedPieceColor(4)" class="w-5 h-5 rounded-full bg-purple-600 border-2 border-pink-300 hover:scale-110 transition"></button>
-            <button onclick="setSelectedPieceColor(5)" class="w-5 h-5 rounded-full bg-indigo-950 border-2 border-yellow-300 hover:scale-110 transition"></button>
-          </div>
-          <button onclick="transformSelectedPiece('layer', 1)" class="px-2 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬆️ Front</button>
-          <button onclick="transformSelectedPiece('layer', -1)" class="px-2 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬇️ Back</button>
-          <button id="inspector-add-one-btn" onclick="addOrBuyAnotherOfSelected()" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold btn-3d">➕ +1 More</button>
-          <button onclick="deleteSelectedPiece()" class="px-2.5 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold btn-3d">📦 Store</button>
         </div>
 
         <!-- SVG VIEWPORT (ZOOMABLE & PANNABLE) -->
@@ -643,17 +636,55 @@
         <!-- 3D INTERACTIVE THREE.JS ROOM VIEWPORT (WITH RAYCAST DRAGGING & HEIGHT CONTROLS) -->
         <div id="studio-3d-viewport" class="hidden absolute inset-0 z-20 bg-slate-950">
           <div id="studio-3d-canvas-host" class="w-full h-full touch-none cursor-grab active:cursor-grabbing"></div>
-          <div class="absolute top-3 left-3 bg-slate-900/90 backdrop-blur px-3.5 py-2 rounded-2xl border border-cyan-400/50 text-xs text-cyan-200 pointer-events-none shadow-lg">
-            🧊 <strong>3D Room Editor:</strong> Click and drag any fort piece in 3D to move it! Scroll to zoom.
+          <div class="studio-room-heading pointer-events-none">
+            <span id="studio-view-caption">REAL-TIME 3D · 360° ROOM</span>
+            <strong>The Cozy Fort Studio</strong>
+            <p id="studio-gesture-hint">Drag to orbit 360°. Tap a piece to select it. Pinch to zoom.</p>
+          </div>
+          <div class="studio-orbit-controls" aria-label="3D camera and motion controls">
+            <div class="studio-control-pair">
+              <button id="studio-mode-orbit" class="studio-control-active" onclick="setStudioInteractionMode('orbit')" aria-pressed="true">◎ Orbit</button>
+              <button id="studio-mode-move" onclick="setStudioInteractionMode('move')" aria-pressed="false">✥ Move pieces</button>
+            </div>
+            <button onclick="zoomStudio3D(-1.4)" aria-label="Zoom in">＋</button>
+            <button onclick="zoomStudio3D(1.4)" aria-label="Zoom out">−</button>
+            <button onclick="turnStudioCamera()" title="Turn camera 45 degrees">↻ Turn</button>
+            <button onclick="resetStudio3DCamera()">⌂ Reset view</button>
+            <button id="studio-rotate-btn" onclick="toggleStudioAutoRotate()" aria-pressed="true">◉ Auto swivel on</button>
+            <button id="studio-motion-btn" onclick="toggleStudioMotion()" aria-pressed="true">✧ Motion on</button>
           </div>
           <!-- 3D Height Controls for stacking cushions -->
-          <div class="absolute bottom-3 left-3 z-30 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-2xl p-2 flex items-center gap-2 shadow-xl">
-            <span class="text-xs font-bold text-amber-300">Stack Height:</span>
+          <div class="absolute bottom-20 left-3 z-30 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-2xl p-2 flex items-center gap-2 shadow-xl">
+            <span class="text-xs font-bold text-amber-300">Selected piece:</span>
             <button onclick="adjustSelected3DHeight(0.3)" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold btn-3d">⬆️ Lift Up</button>
             <button onclick="adjustSelected3DHeight(-0.3)" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬇️ Lower</button>
           </div>
         </div>
       </div>
+
+        <!-- FLOATING INSPECTOR TOOLBAR -->
+        <div id="fort-inspector-bar" class="hidden studio-actions bg-slate-900/95 border border-amber-300/40 rounded-2xl px-3 py-3 shadow-xl flex flex-wrap items-center gap-2">
+          <span id="inspector-item-label" class="text-xs font-heading font-bold text-amber-300 mr-1 w-full">Selected Piece</span>
+          <button id="inspector-play-btn" onclick="triggerSelectedPieceToyAction()" class="hidden px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-heading font-extrabold text-xs shadow btn-3d">🎉 Activate Toy!</button>
+          <button onclick="transformSelectedPiece('rotate', -15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↺ Tilt L</button>
+          <button onclick="transformSelectedPiece('rotate', 15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↻ Tilt R</button>
+          <button onclick="transformSelectedPiece('scale', -0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">➖ Smaller</button>
+          <button onclick="transformSelectedPiece('scale', 0.12)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">➕ Bigger</button>
+          <button onclick="transformSelectedPiece('flip')" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">↔️ Flip</button>
+          <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700">
+            <button onclick="setSelectedPieceColor(0)" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-white hover:scale-110 transition"></button>
+            <button onclick="setSelectedPieceColor(1)" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white hover:scale-110 transition"></button>
+            <button onclick="setSelectedPieceColor(2)" class="w-5 h-5 rounded-full bg-rose-500 border-2 border-white hover:scale-110 transition"></button>
+            <button onclick="setSelectedPieceColor(3)" class="w-5 h-5 rounded-full bg-amber-400 border-2 border-white hover:scale-110 transition"></button>
+            <button onclick="setSelectedPieceColor(4)" class="w-5 h-5 rounded-full bg-purple-600 border-2 border-pink-300 hover:scale-110 transition"></button>
+            <button onclick="setSelectedPieceColor(5)" class="w-5 h-5 rounded-full bg-indigo-950 border-2 border-yellow-300 hover:scale-110 transition"></button>
+          </div>
+          <button onclick="transformSelectedPiece('layer', 1)" class="px-2 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬆️ Front</button>
+          <button onclick="transformSelectedPiece('layer', -1)" class="px-2 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold btn-3d">⬇️ Back</button>
+          <button id="inspector-add-one-btn" onclick="addOrBuyAnotherOfSelected()" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold btn-3d">➕ +1 More</button>
+          <button onclick="deleteSelectedPiece()" class="px-2.5 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold btn-3d">📦 Store</button>
+        </div>
+
 
       <!-- INVENTORY DOCK -->
       <div class="bg-slate-900/95 border border-indigo-500/30 rounded-3xl p-3 sm:p-4 shadow-2xl">
@@ -1220,8 +1251,8 @@
           btnEl.className = 'flex-1 md:flex-initial px-4 py-2 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 text-slate-300 hover:text-white relative';
         }
       });
-      if (tab === 'quiz') { renderRegionSelectorBar(); renderMapVisualState(); resizeThreeJSViewports(); }
-      else if (tab === 'studio') { renderFortSandbox(); renderInventoryDock(); resizeThreeJSViewports(); }
+      if (tab === 'quiz') { renderRegionSelectorBar(); renderMapVisualState(); mountStudioRenderer(); }
+      else if (tab === 'studio') { renderFortSandbox(); renderInventoryDock(); setStudio3DView(studioViewPreference === '3d'); }
       else if (tab === 'cert') { renderCertificateView(); }
       updateHeaderUI();
     }
@@ -2209,6 +2240,7 @@
     });
 
     function animateInteractiveToy(piece) {
+      triggerStudioToy(piece.uid);
       if (piece.typeId === 'toy_trampoline') {
         playSound('boing');
       } else if (piece.typeId === 'toy_slide') {
@@ -2621,217 +2653,459 @@
     }
     function closeStudyGuideModal() { document.getElementById('study-modal').classList.add('hidden'); }
 
-    // THREE.JS 3D DIORAMA & ROOM EDITOR WITH RAYCASTING & HEIGHT
-    let threeRenderer = null, threeScene = null, threeCamera = null, threeFortGroup = null, threeDiscoGroup = null;
-    let isStudio3DActive = false;
-    let cameraOrbitAngle = 0.22, cameraOrbitPitch = 0.38, isOrbitDragging = false, lastOrbitX = 0, lastOrbitY = 0;
-    const THREE_PALETTE_HEX = [0x3b82f6, 0x10b981, 0xf43f5e, 0xf59e0b, 0x9333ea, 0x312e81];
-    let threeRaycaster = null;
-    let threeMouse = null;
-    let active3DDragObject = null;
-    let threePlane = null;
-    let threeDragOffset = null;
-    let cameraOrbitRadius = 9.2;
-    let threeSceneSignature = null;
+    // Shared 3D scene: the challenge diorama and studio use the same renderer and models.
+    let threeRenderer = null, threeScene = null, threeCamera = null, threeFortGroup = null;
+    let threeRoom = null, threeKeyLight = null, threeFillLight = null;
+    let isStudio3DActive = false, studioViewPreference = '3d';
+    let cameraOrbitAngle = 0.42, cameraOrbitPitch = 0.48, cameraOrbitRadius = 14.4;
+    let orbitTargetAngle = 0.42, orbitTargetPitch = 0.48, orbitTargetRadius = 14.4;
+    let studioAutoRotate = true, studioInteractionMode = 'orbit', studioMotion = true;
+    let isOrbitDragging = false, active3DDragObject = null, threeDragOffset = null;
+    let threeRaycaster = null, threeMouse = null, threePlane = null, threeSceneSignature = null;
+    let threePreviousTime = 0, threeElapsed = 0, threeSelectionRing = null;
+    const studioPointers = new Map();
+    let pinchDistance = 0, pinchRadius = 14.4, pointerStart = null;
+    const fabricMaterials = new Map(), studioTextures = new Map();
+    const roomTwinkles = [];
+    const THREE_PALETTE_HEX = [0x547fca, 0x469b85, 0xd57584, 0xdcb861, 0x9b79bc, 0x394b80];
+    const studioClock = () => typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const studioClamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
-    function show3DFallback() {
-      const host = document.getElementById('mini-3d-fort-container');
-      if (host) host.innerHTML = '<p class="p-4 pt-12 text-center text-sm text-slate-200">Build your fort in the 2D Studio. 3D preview is unavailable on this device.</p>';
-      document.getElementById('toggle-3d-studio-btn').disabled = true;
-      document.getElementById('toggle-3d-studio-label').textContent = '2D Builder Ready';
+    function studioCanvasTexture(key, draw, width = 256, height = 256) {
+      if (studioTextures.has(key)) return studioTextures.get(key);
+      const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+      draw(canvas.getContext('2d'), width, height);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.anisotropy = Math.min(8, threeRenderer.capabilities?.getMaxAnisotropy?.() || 1);
+      studioTextures.set(key, texture); return texture;
     }
-
-    function initThreeJSDiorama() {
-      if (typeof THREE === 'undefined') { show3DFallback(); return; }
-      const host = document.getElementById('mini-3d-fort-container');
-      if (!host) return;
-
-      threeRaycaster = new THREE.Raycaster();
-      threeMouse = new THREE.Vector2();
-      threePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-      threeScene = new THREE.Scene();
-      threeScene.background = new THREE.Color(0x090d16);
-      threeCamera = new THREE.PerspectiveCamera(42, host.clientWidth / Math.max(1, host.clientHeight), 0.1, 100);
-      try { threeRenderer = new THREE.WebGLRenderer({ antialias: true }); }
-      catch (error) { console.warn('3D preview unavailable', error); show3DFallback(); return; }
-      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      threeRenderer.setSize(host.clientWidth, host.clientHeight);
-      threeRenderer.shadowMap.enabled = true;
-      host.innerHTML = '';
-      host.appendChild(threeRenderer.domElement);
-
-      threeScene.add(new THREE.HemisphereLight(0xfef3c7, 0x1e1b4b, 0.75));
-      const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.95);
-      dirLight.position.set(6, 12, 8);
-      dirLight.castShadow = true;
-      threeScene.add(dirLight);
-
-      const floor = new THREE.Mesh(new THREE.BoxGeometry(16, 0.3, 10), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 }));
-      floor.position.y = -0.15; floor.receiveShadow = true;
-      threeScene.add(floor);
-
-      threeFortGroup = new THREE.Group();
-      threeScene.add(threeFortGroup);
-
-      const attachEvents = el => {
-        el.addEventListener('pointerdown', e => {
-          e.preventDefault();
-          el.setPointerCapture(e.pointerId);
-          isOrbitDragging = true;
-          lastOrbitX = e.clientX; lastOrbitY = e.clientY;
-          if (isStudio3DActive) {
-            const rect = el.getBoundingClientRect();
-            threeMouse.x = ((e.clientX - rect.left) / el.clientWidth) * 2 - 1;
-            threeMouse.y = -((e.clientY - rect.top) / el.clientHeight) * 2 + 1;
-            threeRaycaster.setFromCamera(threeMouse, threeCamera);
-            const intersects = threeRaycaster.intersectObjects(threeFortGroup.children, true);
-            if (intersects.length > 0) {
-              let obj = intersects[0].object;
-              while (obj.parent && obj.parent !== threeFortGroup) obj = obj.parent;
-              active3DDragObject = obj;
-              threePlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0, 1, 0), obj.position);
-              const hit = new THREE.Vector3();
-              threeDragOffset = threeRaycaster.ray.intersectPlane(threePlane, hit) ? obj.position.clone().sub(hit) : new THREE.Vector3();
-              selectedPieceUid = obj.userData.uid;
-              updateInspectorBarUI();
-            }
+    function studioWeaveTexture() {
+      return studioCanvasTexture('weave', (c, w, h) => {
+        c.fillStyle = '#bcbcbc'; c.fillRect(0, 0, w, h);
+        for (let y = 0; y < h; y += 4) for (let x = 0; x < w; x += 4) {
+          c.fillStyle = (x + y) % 8 ? '#a4a4a4' : '#dedede'; c.fillRect(x, y, 3, 1);
+          c.fillStyle = '#cacaca'; c.fillRect(x, y + 1, 1, 3);
+        }
+      });
+    }
+    function studioFabric(colorIndex = 0) {
+      const key = Number(colorIndex) % 6;
+      if (fabricMaterials.has(key)) return fabricMaterials.get(key);
+      const material = new THREE.MeshStandardMaterial({ color: THREE_PALETTE_HEX[key], roughness: 0.96,
+        metalness: 0, bumpMap: studioWeaveTexture(), bumpScale: 0.028 });
+      if (key >= 4) {
+        material.map = studioCanvasTexture('fabric-' + key, (c, w, h) => {
+          c.fillStyle = key === 4 ? '#b09ad1' : '#7788bb'; c.fillRect(0, 0, w, h);
+          if (key === 4) {
+            for (let i = 0; i < w; i += 48) { c.fillStyle = 'rgba(255,230,240,.24)'; c.fillRect(i, 0, 16, h); c.fillRect(0, i, w, 16);
+              c.fillStyle = 'rgba(255,240,190,.45)'; c.fillRect(i + 24, 0, 2, h); c.fillRect(0, i + 24, w, 2); }
+          } else {
+            for (let i = 0; i < 90; i++) { c.beginPath(); c.fillStyle = i % 3 ? '#e6dcff' : '#ffe8a0';
+              c.arc((i * 73 + 19) % w, (i * 43 + 7) % h, i % 5 === 0 ? 2.2 : 0.9, 0, Math.PI * 2); c.fill(); }
           }
         });
-        el.addEventListener('wheel', e => { e.preventDefault(); cameraOrbitRadius = Math.max(5, Math.min(18, cameraOrbitRadius + e.deltaY * 0.01)); }, { passive: false });
-      };
-      attachEvents(host);
-      const studioHost = document.getElementById('studio-3d-canvas-host');
-      if (studioHost) attachEvents(studioHost);
-
-      window.addEventListener('pointermove', e => {
-        if (!isOrbitDragging) return;
-        const dx = e.clientX - lastOrbitX; const dy = e.clientY - lastOrbitY;
-        lastOrbitX = e.clientX; lastOrbitY = e.clientY;
-        if (active3DDragObject && isStudio3DActive) {
-          const hostEl = document.getElementById('studio-3d-canvas-host');
-          const rect = hostEl.getBoundingClientRect();
-          threeMouse.x = ((e.clientX - rect.left) / hostEl.clientWidth) * 2 - 1;
-          threeMouse.y = -((e.clientY - rect.top) / hostEl.clientHeight) * 2 + 1;
-          threeRaycaster.setFromCamera(threeMouse, threeCamera);
-          const target = new THREE.Vector3();
-          if (!threeRaycaster.ray.intersectPlane(threePlane, target)) return;
-          target.add(threeDragOffset);
-          active3DDragObject.position.x = Math.max(-5, Math.min(5, target.x));
-          active3DDragObject.position.z = Math.max(-4, Math.min(3, target.z));
-          const p = state.placedPieces.find(item => item.uid === active3DDragObject.userData.uid);
-          if (p) { p.x = Math.round(500 + (active3DDragObject.position.x / 5.5) * 500); p.depth3d = active3DDragObject.position.z; }
-        } else {
-          cameraOrbitAngle -= dx * 0.008;
-          cameraOrbitPitch = Math.max(0.1, Math.min(1.2, cameraOrbitPitch + dy * 0.008));
-        }
-      });
-      const finish3DDrag = () => {
-        const moved = !!active3DDragObject;
-        isOrbitDragging = false; active3DDragObject = null;
-        if (moved) { saveState(); renderFortSandbox(); }
-      };
-      window.addEventListener('pointerup', finish3DDrag);
-      window.addEventListener('pointercancel', finish3DDrag);
-      window.addEventListener('resize', resizeThreeJSViewports);
-      syncThreeJSFortScene();
-      animateThreeJSLoop();
+        material.map.encoding = THREE.sRGBEncoding;
+      }
+      material.userData.sharedStudioMaterial = true; fabricMaterials.set(key, material); return material;
     }
-
+    function studioMaterial(color, roughness = 0.65, metalness = 0) {
+      return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+    }
+    function studioMesh(geometry, material, parent, x = 0, y = 0, z = 0) {
+      const mesh = new THREE.Mesh(geometry, material); mesh.position.set(x, y, z);
+      mesh.castShadow = true; mesh.receiveShadow = true; if (parent) parent.add(mesh); return mesh;
+    }
+    function studioSoftGeometry(w, h, d, softness = 0.38, tuft = false) {
+      const geo = new THREE.SphereGeometry(1, 40, 24), pos = geo.attributes.position;
+      const power = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), e);
+      for (let i = 0; i < pos.count; i++) {
+        const x = power(pos.getX(i), softness) * w / 2;
+        let y = power(pos.getY(i), 0.72) * h / 2;
+        const z = power(pos.getZ(i), softness) * d / 2;
+        if (tuft && y > 0) {
+          const dx = x / w, dz = z / d;
+          y -= Math.exp(-(dx * dx + dz * dz) * 55) * h * 0.11;
+        }
+        pos.setXYZ(i, x, y, z);
+      }
+      pos.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere(); return geo;
+    }
+    function studioPiping(parent, w, d, material, y = 0, radius = 0.014) {
+      const points = [], pow = v => Math.sign(v) * Math.pow(Math.abs(v), 0.38);
+      for (let i = 0; i < 80; i++) { const a = i / 80 * Math.PI * 2; points.push(new THREE.Vector3(pow(Math.cos(a)) * w / 2, y, pow(Math.sin(a)) * d / 2)); }
+      const curve = new THREE.CatmullRomCurve3(points, true);
+      return studioMesh(new THREE.TubeGeometry(curve, 80, radius, 5, true), material, parent);
+    }
+    function studioCushion(w, h, d, colorIndex = 0, tuft = false) {
+      const g = new THREE.Group();
+      studioMesh(studioSoftGeometry(w, h, d, 0.38, tuft), studioFabric(colorIndex), g);
+      const piping = studioMaterial(new THREE.Color(THREE_PALETTE_HEX[colorIndex % 6]).lerp(new THREE.Color(0xffffff), 0.40), 0.94);
+      studioPiping(g, w * 0.995, d * 0.995, piping, 0, 0.013);
+      if (tuft) studioMesh(new THREE.SphereGeometry(0.045, 12, 8), piping, g, 0, h * 0.38, 0).scale.y = 0.32;
+      return g;
+    }
+    function studioRod(parent, a, b, radius, material) {
+      const start = new THREE.Vector3(...a), end = new THREE.Vector3(...b), direction = end.clone().sub(start);
+      const mesh = studioMesh(new THREE.CylinderGeometry(radius, radius, direction.length(), 10), material, parent);
+      mesh.position.copy(start.add(end).multiplyScalar(0.5)); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize()); return mesh;
+    }
+    function studioGlow(parent, color = '#ffcf83', scale = 0.55) {
+      const map = studioCanvasTexture('glow', (c, w, h) => { const grad = c.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
+        grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.2, 'rgba(255,255,255,.32)'); grad.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = grad; c.fillRect(0, 0, w, h); }, 64, 64);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, color, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+      sprite.scale.set(scale, scale, 1); parent.add(sprite); return sprite;
+    }
+    function studioText(text, color = '#f8e7bd', background = '#73523d') {
+      const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = 192;
+      const c = canvas.getContext('2d'); c.fillStyle = background; c.fillRect(0, 0, 768, 192); c.fillStyle = color;
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 52px sans-serif'; c.fillText(text, 384, 98, 710);
+      const tex = new THREE.CanvasTexture(canvas); tex.encoding = THREE.sRGBEncoding;
+      const material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 }); material.userData.ownedTexture = tex;
+      return material;
+    }
+    function studioCloth(w, d, colorIndex, type) {
+      const geo = new THREE.PlaneGeometry(w, d, 32, 24), pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getY(i), nx = x / (w/2), nz = z / (d/2);
+        let y = type === 'mat' ? 0.028 * Math.sin(nx*15) * Math.cos(nz*12) : type === 'slope' ? -nx * 0.85 : 0.9 - Math.pow(Math.abs(nx), 1.75) * 1.3;
+        y -= type === 'mat' ? 0 : 0.14 * (1 - nz*nz);
+        y += type === 'mat' ? 0 : 0.035 * Math.sin(nx*16 + nz*2) * (0.4 + Math.abs(nx));
+        pos.setXYZ(i, x, y, z);
+      }
+      geo.computeVertexNormals();
+      const mat = studioFabric(colorIndex).clone(); mat.side = THREE.DoubleSide; mat.userData.sharedStudioMaterial = false;
+      const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.userData.clothRest = new Float32Array(pos.array); return mesh;
+    }
+    function buildStudioItem(piece) {
+      const g = new THREE.Group(), color = piece.colorIdx ?? 0, type = piece.typeId;
+      const wood = studioMaterial(0xa77b50, 0.66), brass = studioMaterial(0xdcb970, 0.32, 0.65);
+      const cream = studioMaterial(0xf4e5cb, 0.94), dark = studioMaterial(0x263140, 0.75);
+      const soft = (w,h,d,x=0,y=0,z=0,c=color,tuft=false) => { const p=studioCushion(w,h,d,c,tuft); p.position.set(x,y,z); g.add(p); return p; };
+      const ball = (r,mat,x=0,y=0,z=0) => studioMesh(new THREE.SphereGeometry(r,24,16),mat,g,x,y,z);
+      g.userData.floorOffset = 0.3;
+      if (type === 'cush_square') { soft(1.95,0.58,1.55); g.userData.floorOffset=0.31; }
+      else if (type === 'cush_lean') { soft(2.4,0.45,1.45); g.userData.floorOffset=0.25; }
+      else if (type === 'cush_pillar') { const c=soft(0.85,0.7,2.0); c.rotation.x=Math.PI/2; g.userData.floorOffset=1.02; }
+      else if (type === 'pillow_throw') { soft(1.15,0.54,1.05,0,0,0,color,true); g.userData.floorOffset=0.30; }
+      else if (type === 'pillow_pouf') { const c=soft(1.35,0.70,1.35,0,0,0,color,true); c.rotation.y=Math.PI/4; g.userData.floorOffset=0.39; }
+      else if (type === 'pillow_bolster') { const c=soft(1.65,0.58,0.58); g.userData.floorOffset=0.31; }
+      else if (type === 'pillow_star') {
+        const shape = new THREE.Shape(); for(let i=0;i<10;i++){const a=i*Math.PI/5+Math.PI/2,r=i%2?0.28:0.61;const x=Math.cos(a)*r,y=Math.sin(a)*r;i?shape.lineTo(x,y):shape.moveTo(x,y);}shape.closePath();
+        const mesh=studioMesh(new THREE.ExtrudeGeometry(shape,{depth:0.20,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:0.11,bevelThickness:0.11}),studioFabric(3),g,0,0,-0.1);
+        mesh.rotation.x=-Math.PI/2; g.userData.floorOffset=0.26;
+      } else if (type === 'supp_chair' || type === 'toy_throne') {
+        const throne=type==='toy_throne'; const frame=throne?brass:wood;
+        for(const x of [-0.44,0.44])for(const z of [-0.40,0.40])studioRod(g,[x,-0.83,z],[x,0,z],0.055,frame);
+        soft(1.12,0.24,1.05,0,0,0,throne?2:color);
+        studioRod(g,[-0.48,-0.1,-0.45],[-0.48,1.10,-0.45],0.06,frame);studioRod(g,[0.48,-0.1,-0.45],[0.48,1.10,-0.45],0.06,frame);
+        for(let y=0.45;y<1.15;y+=0.25)studioRod(g,[-0.48,y,-0.45],[0.48,y,-0.45],0.052,frame);
+        if(throne){const back=soft(0.85,0.22,0.88,0,0.62,-0.43,2,true);back.rotation.x=Math.PI/2;ball(0.13,brass,0,1.25,-0.45);}
+        g.userData.floorOffset=0.87;
+      } else if (type === 'supp_books') {
+        for(let i=0;i<4;i++){const book=new THREE.Group();book.rotation.y=(i%2?0.12:-0.12);book.position.y=i*0.19;
+          studioMesh(new THREE.BoxGeometry(1.1,0.14,0.72),cream,book);for(const y of [-0.085,0.085])studioMesh(new THREE.BoxGeometry(1.15,0.03,0.77),studioFabric(i),book,0,y,0);
+          studioMesh(new THREE.BoxGeometry(0.055,0.19,0.77),studioFabric(i),book,-0.55,0,0);g.add(book);}g.userData.floorOffset=0.12;
+      } else if (type === 'supp_box') {
+        studioMesh(new THREE.BoxGeometry(1.55,1.5,1.35),studioMaterial(0xbb8f5b,0.95),g,0,0.2,0);
+        for(let i=0;i<4;i++)for(const z of [-0.66,0.66])studioMesh(new THREE.BoxGeometry(0.22,0.28,0.12),wood,g,-0.66+i*0.44,1.07,z);
+        const window=studioMesh(new THREE.PlaneGeometry(0.50,0.65),dark,g,0,0.35,0.681);
+        for(const x of [-0.30,0.30])studioRod(g,[x,0.0,0.69],[x,0.72,0.69],0.035,brass); g.userData.floorOffset=0.58;
+      } else if (type.startsWith('blanket')) {
+        const kind=type==='blanket_mat'?'mat':type==='blanket_slope'?'slope':'canopy';
+        const cloth=studioCloth(kind==='mat'?3.0:4.1,kind==='mat'?2.0:2.8,color,kind);g.add(cloth);g.userData.cloth=cloth;
+        if(kind!=='mat'){for(const x of [-2.0,2.0])studioRod(g,[x,-0.7,-1.32],[x,kind==='slope'?-x*0.43:-0.35,-1.32],0.04,wood);}
+        for(let i=0;i<11;i++){const x=-1.9+i*0.38;const y=kind==='mat'?0:kind==='slope'?-x*0.43:0.9-Math.pow(Math.abs(x/2.05),1.75)*1.3;
+          studioRod(g,[x,y,1.38],[x,y-0.12,1.38],0.012,cream);}
+        g.userData.floorOffset=kind==='mat'?0.12:0.90;
+      } else if (type === 'light_fairy') {
+        const pts=[];for(let i=0;i<=36;i++){const x=-2.2+i/36*4.4;pts.push(new THREE.Vector3(x,0.22*(x*x/4.84)-0.22,0));}
+        studioMesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),36,0.013,5,false),dark,g);
+        g.userData.bulbs=[];
+        for(let i=0;i<11;i++){const x=-2.1+i*0.42,y=0.22*x*x/4.84-0.27;
+          const mat=new THREE.MeshStandardMaterial({color:0xffe5a8,emissive:0xffb344,emissiveIntensity:1.8,roughness:0.35});ball(0.055,mat,x,y,0);g.userData.bulbs.push(mat);
+          const glow=studioGlow(g,'#ffce80',0.4);glow.position.set(x,y,0);}
+        g.userData.floorOffset=0.3;
+      } else if (type==='light_lantern' || type==='light_flash') {
+        const flash=type==='light_flash';
+        studioMesh(new THREE.CylinderGeometry(0.23,0.29,0.12,24),brass,g,0,-0.35,0);
+        studioMesh(new THREE.CylinderGeometry(0.22,0.22,0.58,24),new THREE.MeshStandardMaterial({color:0xffe2a4,emissive:0xffa53d,emissiveIntensity:1.15,transparent:true,opacity:0.65,roughness:0.18}),g);
+        studioMesh(new THREE.ConeGeometry(0.32,0.19,24),dark,g,0,0.39,0);
+        for(const x of [-0.18,0.18])studioRod(g,[x,-0.3,0],[x,0.3,0],0.022,brass);
+        const handle=studioMesh(new THREE.TorusGeometry(0.20,0.023,8,24,Math.PI),brass,g,0,0.46,0);
+        studioGlow(g,'#ffb96d',1.6);g.userData.floorOffset=0.44;
+        if(flash){const beam=studioMesh(new THREE.ConeGeometry(0.75,2.6,24,1,true),new THREE.MeshBasicMaterial({color:0xffe8b7,transparent:true,opacity:0.10,depthWrite:false,side:THREE.DoubleSide}),g,0,1.6,0);beam.rotation.z=Math.PI;}
+      } else if (type==='toy_trampoline') {
+        const mat=studioMesh(new THREE.CylinderGeometry(1.05,1.05,0.09,48),dark,g,0,0.18,0);
+        const rim=studioMesh(new THREE.TorusGeometry(1.08,0.10,12,48),studioFabric(color),g,0,0.19,0);rim.rotation.x=Math.PI/2;
+        for(let i=0;i<8;i++){const a=i*Math.PI/4;studioRod(g,[Math.cos(a),-0.25,Math.sin(a)],[Math.cos(a),0.13,Math.sin(a)],0.035,brass);}g.userData.floorOffset=0.31;
+      } else if(type==='toy_slide') {
+        const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-1.2,1.1,0),new THREE.Vector3(-0.8,1.0,0),new THREE.Vector3(0.4,-0.4,0),new THREE.Vector3(1.35,-0.48,0)]);
+        const geo=new THREE.PlaneGeometry(2.9,0.9,36,4),pos=geo.attributes.position;
+        for(let i=0;i<pos.count;i++){const t=studioClamp((pos.getX(i)+1.45)/2.9,0,1),p=curve.getPoint(t),z=pos.getY(i);pos.setXYZ(i,p.x,p.y+Math.pow(Math.abs(z)/0.45,6)*0.13,z);}geo.computeVertexNormals();
+        const mat=studioFabric(color).clone();mat.side=THREE.DoubleSide;mat.userData.sharedStudioMaterial=false;studioMesh(geo,mat,g);
+        for(const z of [-0.49,0.49])studioRod(g,[-1.15,-0.45,z],[-1.15,1.1,z],0.055,wood);
+        for(let i=0;i<4;i++)studioRod(g,[-1.15,i*0.34-0.25,-0.49],[-1.15,i*0.34-0.25,0.49],0.035,wood);g.userData.floorOffset=0.55;
+      } else if(type==='toy_disco') {
+        const disco=new THREE.Group();g.add(disco);g.userData.spinner=disco;
+        ball(0.53,studioMaterial(0x8aa4c0,0.15,0.65));
+        const tiles=new THREE.InstancedMesh(new THREE.PlaneGeometry(0.14,0.14),studioMaterial(0xd8e1ec,0.18,0.6),180);
+        const tile=new THREE.Object3D();let tileIndex=0;
+        for(let row=1;row<10;row++)for(let col=0;col<20;col++){const phi=row/10*Math.PI,theta=col/20*Math.PI*2;
+          tile.position.set(0.54*Math.sin(phi)*Math.cos(theta),0.54*Math.cos(phi),0.54*Math.sin(phi)*Math.sin(theta));tile.lookAt(tile.position.clone().multiplyScalar(2));tile.updateMatrix();
+          tiles.setMatrixAt(tileIndex,tile.matrix);tiles.setColorAt(tileIndex,new THREE.Color().setHSL((col+row*2)/30,0.18,0.76));tileIndex++;}
+        disco.add(tiles);
+        studioRod(g,[0,0.52,0],[0,1.15,0],0.014,dark);g.userData.floorOffset=0.6;
+      } else if(type==='toy_projector') {
+        ball(0.36,dark).scale.y=0.6;const lens=ball(0.16,new THREE.MeshStandardMaterial({color:0xa3caff,emissive:0x5f79ff,emissiveIntensity:1.3}),0,0.19,0);
+        const stars=new THREE.Group();g.add(stars);g.userData.spinner=stars;
+        for(let i=0;i<38;i++){const a=i*2.399,r=0.5+(i%9)*0.14;const p=studioMesh(new THREE.SphereGeometry(0.018,6,4),new THREE.MeshBasicMaterial({color:i%2?0x9ebcff:0xe2b6ff}),stars,Math.cos(a)*r,0.65+(i%7)*0.16,Math.sin(a)*r);}
+        studioGlow(g,'#89a2ff',2.8).position.y=0.6;g.userData.floorOffset=0.24;
+      } else if(type==='toy_popcorn') {
+        studioMesh(new THREE.BoxGeometry(0.9,0.65,0.65),studioFabric(2),g,0,0.1,0);studioMesh(new THREE.BoxGeometry(1.1,0.1,0.82),brass,g,0,0.48,0);
+        for(const x of [-0.46,0.46])for(const z of [-0.36,0.36])studioRod(g,[x,0.5,z],[x,1.15,z],0.025,brass);
+        studioMesh(new THREE.BoxGeometry(1.12,0.12,0.86),studioFabric(color),g,0,1.2,0);
+        for(let i=0;i<18;i++)ball(0.08,cream,Math.sin(i*4)*0.32,0.52+(i%3)*0.06,Math.cos(i*3)*0.22);
+        for(const x of [-0.38,0.38]){const wheel=studioMesh(new THREE.TorusGeometry(0.17,0.035,8,20),dark,g,x,-0.36,0.30);}
+        g.userData.floorOffset=0.56;
+      } else if(type==='prop_sign') {
+        studioMesh(studioSoftGeometry(2.5,0.70,0.15,0.2),wood,g);
+        studioMesh(new THREE.PlaneGeometry(2.30,0.58),studioText((state.playerName||'Explorer').slice(0,22)+"'s Fort"),g,0,0,0.082);
+        studioRod(g,[0,-0.35,0],[0,-1.0,0],0.055,wood);g.userData.floorOffset=1.04;
+      } else if(type==='prop_soccer') {
+        const tex=studioCanvasTexture('soccer',(c,w,h)=>{c.fillStyle='#eee9dd';c.fillRect(0,0,w,h);for(let row=0;row<5;row++)for(let col=0;col<8;col++){const x=col*32+(row%2)*16,y=row*52;c.beginPath();for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const px=x+Math.cos(a)*11,py=y+Math.sin(a)*11;i?c.lineTo(px,py):c.moveTo(px,py);}c.closePath();c.fillStyle='#263140';c.fill();c.strokeStyle='#777c80';c.lineWidth=1;c.stroke();}});
+        tex.encoding=THREE.sRGBEncoding;ball(0.43,new THREE.MeshStandardMaterial({map:tex,roughness:0.85,bumpMap:studioWeaveTexture(),bumpScale:0.005}));g.userData.floorOffset=0.45;
+      } else if(type==='prop_puppy') {
+        const fur=studioMaterial(0xc99a60,1),light=studioMaterial(0xf3d7aa,1);
+        ball(0.37,fur,0,0,0).scale.set(1.1,0.85,1.35);ball(0.30,light,0,0.28,0.38);
+        for(const x of [-0.25,0.25]){ball(0.13,fur,x,0.24,0.42).scale.y=1.6;ball(0.13,light,x,-0.20,0.28);ball(0.035,dark,x*0.46,0.36,0.625);}
+        ball(0.07,dark,0,0.24,0.68);const tail=ball(0.12,fur,0,0.1,-0.5);tail.scale.z=2;g.userData.floorOffset=0.35;
+      } else if(type==='prop_snacks') {
+        studioMesh(studioSoftGeometry(1.65,0.09,1.0,0.2),wood,g);
+        const cup=studioMesh(new THREE.CylinderGeometry(0.20,0.17,0.34,24,1,true),cream,g,0.40,0.22,0);
+        studioMesh(new THREE.CylinderGeometry(0.18,0.18,0.015,24),studioMaterial(0x482b20,0.45),g,0.4,0.37,0);
+        const handle=studioMesh(new THREE.TorusGeometry(0.12,0.035,8,20),cream,g,0.62,0.24,0);
+        for(let i=0;i<3;i++){const x=-0.48+i*0.24,z=(i%2)*0.2-0.1;studioMesh(new THREE.CylinderGeometry(0.19,0.20,0.055,18),studioMaterial(0xc38e4c,0.95),g,x,0.11,z);
+          for(let j=0;j<5;j++)ball(0.018,dark,x+Math.cos(j*2.4)*0.12,0.145,z+Math.sin(j*2.4)*0.12);}
+        g.userData.floorOffset=0.12;
+      } else if(type==='prop_easel') {
+        studioRod(g,[-0.5,-0.85,0.25],[0,1.05,0],0.04,wood);studioRod(g,[0.5,-0.85,0.25],[0,1.05,0],0.04,wood);studioRod(g,[0,-0.85,-0.5],[0,1.05,0],0.04,wood);
+        studioMesh(new THREE.BoxGeometry(1.1,1.0,0.06),cream,g,0,0.32,0.09);
+        const art=studioCanvasTexture('painting',(c,w,h)=>{c.fillStyle='#9dcddd';c.fillRect(0,0,w,h);c.fillStyle='#eedb9a';c.beginPath();c.arc(190,58,25,0,Math.PI*2);c.fill();for(let i=0;i<3;i++){c.fillStyle=['#8ab2a0','#4f8d83','#366765'][i];c.beginPath();c.moveTo(0,h);for(let x=0;x<=w;x+=8)c.lineTo(x,130+i*30+Math.sin(x/70+i)*32);c.lineTo(w,h);c.fill();}});
+        art.encoding=THREE.sRGBEncoding;studioMesh(new THREE.PlaneGeometry(0.98,0.88),new THREE.MeshStandardMaterial({map:art,roughness:0.9}),g,0,0.32,0.125);g.userData.floorOffset=0.9;
+      } else { soft(0.9,0.45,0.8); }
+      // Materials created for helper colors but not used by a particular item are cheap CPU objects.
+      g.userData.restScale = g.scale.clone(); return g;
+    }
+    function buildStudioRoom() {
+      threeRoom = new THREE.Group(); threeScene.add(threeRoom);
+      const walnut = studioMaterial(0x654a38,0.75), brass = studioMaterial(0xc6a067,0.38,0.45);
+      const oak = studioCanvasTexture('oak', (c,w,h) => {
+        c.fillStyle='#b88d62';c.fillRect(0,0,w,h);
+        for(let i=0;i<500;i++){c.strokeStyle=`rgba(${i%2?'81,52,31':'245,218,177'},${0.04+(i%5)*0.018})`;c.beginPath();const y=(i*37)%h;
+          c.moveTo(0,y);c.bezierCurveTo(w*.3,y+Math.sin(i)*5,w*.7,y+Math.cos(i)*4,w,y+Math.sin(i*3)*4);c.stroke();}
+        c.strokeStyle='rgba(66,40,25,.36)';c.lineWidth=2;for(let y=0;y<h;y+=42){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}
+      });oak.encoding=THREE.sRGBEncoding;oak.wrapS=oak.wrapT=THREE.RepeatWrapping;oak.repeat.set(3,3);
+      studioMesh(new THREE.CylinderGeometry(7.4,7.45,0.28,96),walnut,threeRoom,0,-0.22,0);
+      const floor=studioMesh(new THREE.CylinderGeometry(7.4,7.4,0.09,96),new THREE.MeshStandardMaterial({map:oak,roughness:0.76}),threeRoom,0,-0.04,0);
+      const rim=studioMesh(new THREE.TorusGeometry(7.39,0.035,8,96),brass,threeRoom,0,0.015,0);rim.rotation.x=Math.PI/2;
+      const rugMat=new THREE.MeshStandardMaterial({color:0x315568,roughness:1,bumpMap:studioWeaveTexture(),bumpScale:0.045});
+      const rug=studioMesh(new THREE.CylinderGeometry(5.75,5.75,0.045,80),rugMat,threeRoom,0,0.035,0);rug.scale.z=0.70;
+      for(const r of [5.44,5.49]){const seam=studioMesh(new THREE.TorusGeometry(r,0.012,5,96),studioMaterial(0xb8c6be,1),threeRoom,0,0.064,0);seam.rotation.x=Math.PI/2;seam.scale.y=0.70;}
+      // A fully modeled sofa makes the room look furnished from every camera angle.
+      const sofa = new THREE.Group();sofa.position.set(0,0,-3.3);threeRoom.add(sofa);
+      const oat = studioMaterial(0xc5b9a2,0.98);oat.bumpMap=studioWeaveTexture();oat.bumpScale=0.025;
+      for(const x of [-1.85,1.85])for(const z of [-0.52,0.55])studioRod(sofa,[x,0.08,z],[x,0.34,z],0.065,walnut);
+      studioMesh(studioSoftGeometry(4.5,0.42,1.65,0.3),oat,sofa,0,0.46,0);
+      studioMesh(studioSoftGeometry(4.4,1.3,0.42,0.3),oat,sofa,0,1.17,-0.66);
+      for(const x of [-2.0,2.0])studioMesh(studioSoftGeometry(0.48,0.95,1.65,0.35),oat,sofa,x,0.90,0);
+      for(const x of [-0.94,0.94]){const seat=studioCushion(1.8,0.30,1.32,0);seat.position.set(x,0.80,0.02);sofa.add(seat);}
+      // Warm lantern lighting and a fern frame the room without walls that obscure an orbit.
+      const lamp=buildStudioItem({typeId:'light_lantern',colorIdx:3});lamp.position.set(5.15,1.05,-2.8);threeRoom.add(lamp);
+      studioMesh(new THREE.CylinderGeometry(0.65,0.55,0.65,32),studioMaterial(0x8f9c86,0.95),threeRoom,-5.25,0.34,-2.8);
+      const leafMat=studioMaterial(0x466f59,0.94);
+      for(let i=0;i<13;i++){const a=i*2.399,r=0.22+(i%3)*0.12;const leaf=studioMesh(new THREE.SphereGeometry(1,12,8),leafMat,threeRoom,-5.25+Math.sin(a)*r,0.98+(i%4)*0.18,-2.8+Math.cos(a)*r);
+        leaf.scale.set(0.10,0.65,0.20);leaf.rotation.z=Math.sin(a)*0.65;leaf.rotation.y=a;}
+      const cordMat=studioMaterial(0x514239,0.9);
+      for(const x of [-5.7,5.7])studioRod(threeRoom,[x,0,-3.9],[x,3.5,-3.9],0.045,walnut);
+      const points=[];for(let i=0;i<=40;i++){const x=-5.7+i/40*11.4;points.push(new THREE.Vector3(x,2.8+x*x*0.022,-3.9));}
+      studioMesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),40,0.012,5,false),cordMat,threeRoom);
+      for(let i=0;i<16;i++){const x=-5.4+i*0.72,y=2.8+x*x*0.022-0.08;const mat=new THREE.MeshStandardMaterial({color:0xffebbb,emissive:0xffbe70,emissiveIntensity:1.8,roughness:0.3});
+        studioMesh(new THREE.SphereGeometry(0.055,12,8),mat,threeRoom,x,y,-3.9);roomTwinkles.push(mat);const glow=studioGlow(threeRoom,'#ffc885',0.40);glow.position.set(x,y,-3.9);}
+      // Very soft environment illumination gives metallic trims a reflection to catch.
+      const environment=studioCanvasTexture('environment',(c,w,h)=>{const grad=c.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#afc5e2');grad.addColorStop(.48,'#f9ecda');grad.addColorStop(.7,'#9b8a78');grad.addColorStop(1,'#554b45');c.fillStyle=grad;c.fillRect(0,0,w,h);c.fillStyle='#fff8e4';c.fillRect(30,22,50,42);c.fillRect(170,35,35,30);},256,128);
+      environment.mapping=THREE.EquirectangularReflectionMapping;environment.encoding=THREE.sRGBEncoding;threeScene.environment=environment;
+    }
+    function show3DFallback() {
+      const host=document.getElementById('mini-3d-fort-container');
+      if(host)host.innerHTML='<p class="p-4 pt-12 text-center text-sm text-slate-200">Your fort is ready in the 2D builder. This device cannot display the 3D room.</p>';
+      document.getElementById('toggle-3d-studio-btn').disabled=true;
+      document.getElementById('toggle-3d-studio-label').textContent='2D Builder Ready';
+      isStudio3DActive=false;studioViewPreference='2d';
+      document.getElementById('studio-3d-viewport').classList.add('hidden');
+    }
+    function initThreeJSDiorama() {
+      if(typeof THREE==='undefined'){show3DFallback();return;}
+      const host=document.getElementById('mini-3d-fort-container');if(!host)return;
+      try{threeRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}
+      catch(error){console.warn('3D preview unavailable',error);show3DFallback();return;}
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+      threeRenderer.outputEncoding=THREE.sRGBEncoding;threeRenderer.toneMapping=THREE.ACESFilmicToneMapping;threeRenderer.toneMappingExposure=1.20;
+      threeRenderer.shadowMap.enabled=true;threeRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
+      threeRenderer.domElement.style.touchAction='none';threeRenderer.domElement.setAttribute('aria-label','Interactive 3D fort room');
+      threeScene=new THREE.Scene();threeScene.background=new THREE.Color(0x141d2c);threeScene.fog=new THREE.Fog(0x141d2c,24,48);
+      threeCamera=new THREE.PerspectiveCamera(43,1,0.1,70);
+      threeRaycaster=new THREE.Raycaster();threeMouse=new THREE.Vector2();threePlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+      threeFillLight=new THREE.HemisphereLight(0xdfebff,0x76604d,0.9);threeScene.add(threeFillLight);
+      threeKeyLight=new THREE.DirectionalLight(0xffedd5,2.1);threeKeyLight.position.set(-3.5,9,5);threeKeyLight.castShadow=true;
+      threeKeyLight.shadow.mapSize.set(1024,1024);Object.assign(threeKeyLight.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:0.5,far:25});
+      threeKeyLight.shadow.bias=-0.0003;threeKeyLight.shadow.normalBias=0.035;threeScene.add(threeKeyLight);
+      const rim=new THREE.DirectionalLight(0x9fbeff,0.7);rim.position.set(3,5,-6);threeScene.add(rim);
+      const warm=new THREE.PointLight(0xffbd7e,0.6,14,2);warm.position.set(4,3,0);threeScene.add(warm);
+      buildStudioRoom();threeFortGroup=new THREE.Group();threeScene.add(threeFortGroup);
+      threeSelectionRing=studioMesh(new THREE.TorusGeometry(0.85,0.018,6,64),new THREE.MeshBasicMaterial({color:0xffdd91,transparent:true,opacity:0.85}),threeScene);
+      threeSelectionRing.rotation.x=Math.PI/2;threeSelectionRing.visible=false;threeSelectionRing.castShadow=false;
+      attachStudioPointers(host);attachStudioPointers(document.getElementById('studio-3d-canvas-host'));
+      window.addEventListener('resize',resizeThreeJSViewports);
+      if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(resizeThreeJSViewports);observer.observe(host);observer.observe(document.getElementById('studio-3d-canvas-host'));}
+      if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){studioMotion=false;studioAutoRotate=false;}
+      syncThreeJSFortScene();mountStudioRenderer();updateStudioControls();animateThreeJSLoop();
+    }
+    function currentStudioHost() {
+      return document.getElementById(activeTopTab==='studio'&&isStudio3DActive?'studio-3d-canvas-host':'mini-3d-fort-container');
+    }
+    function mountStudioRenderer() {
+      if(!threeRenderer)return;
+      const host=currentStudioHost();if(threeRenderer.domElement.parentElement!==host){host.innerHTML='';host.appendChild(threeRenderer.domElement);}
+      resizeThreeJSViewports();
+    }
     function resizeThreeJSViewports() {
-      if (!threeRenderer || !threeCamera) return;
-      const host = isStudio3DActive ? document.getElementById('studio-3d-canvas-host') : document.getElementById('mini-3d-fort-container');
-      if (!host || host.clientWidth === 0) return;
-      threeCamera.aspect = host.clientWidth / Math.max(1, host.clientHeight);
-      threeCamera.updateProjectionMatrix();
-      threeRenderer.setSize(host.clientWidth, host.clientHeight);
+      if(!threeRenderer||!threeCamera)return;const host=currentStudioHost();if(!host||!host.clientWidth||!host.clientHeight)return;
+      threeCamera.aspect=host.clientWidth/host.clientHeight;threeCamera.updateProjectionMatrix();threeRenderer.setSize(host.clientWidth,host.clientHeight);
     }
-
+    function setStudio3DView(enabled) {
+      isStudio3DActive=!!enabled&&!!threeRenderer;
+      document.getElementById('studio-3d-viewport').classList.toggle('hidden',!isStudio3DActive);
+      document.getElementById('studio-camera-controls').classList.toggle('hidden',isStudio3DActive);
+      document.getElementById('toggle-3d-studio-label').textContent=isStudio3DActive?'Open 2D Builder':'Open 3D Studio';
+      document.getElementById('studio-view-caption').textContent=isStudio3DActive?'REAL-TIME 3D • 360° ROOM':'2D FORT BUILDER';
+      mountStudioRenderer();updateStudioControls();
+    }
     function toggleStudio3DView() {
-      if (!threeRenderer) return;
-      playSound('tap');
-      isStudio3DActive = !isStudio3DActive;
-      document.getElementById('studio-camera-controls').classList.toggle('hidden', isStudio3DActive);
-      const vp = document.getElementById('studio-3d-viewport');
-      const lbl = document.getElementById('toggle-3d-studio-label');
-      const studioHost = document.getElementById('studio-3d-canvas-host');
-      const miniHost = document.getElementById('mini-3d-fort-container');
-      if (isStudio3DActive) {
-        vp.classList.remove('hidden'); lbl.textContent = 'Back to 2D Builder';
-        if (threeRenderer && studioHost) { studioHost.innerHTML = ''; studioHost.appendChild(threeRenderer.domElement); resizeThreeJSViewports(); }
-      } else {
-        vp.classList.add('hidden'); lbl.textContent = 'View in 3D Room';
-        if (threeRenderer && miniHost) { miniHost.innerHTML = ''; miniHost.appendChild(threeRenderer.domElement); resizeThreeJSViewports(); }
-      }
+      if(!threeRenderer)return;playSound('tap');studioViewPreference=isStudio3DActive?'2d':'3d';setStudio3DView(studioViewPreference==='3d');
     }
-
-    function adjustSelected3DHeight(delta) {
-      if (!selectedPieceUid) return;
-      const p = state.placedPieces.find(item => item.uid === selectedPieceUid);
-      if (p) {
-        p.y = Math.max(80, Math.min(480, p.y - Math.round(delta * 80)));
-        saveState(); syncThreeJSFortScene(); renderFortSandbox();
-      }
+    function updateStudioControls() {
+      for(const mode of ['orbit','move']){const b=document.getElementById('studio-mode-'+mode);if(b){b.classList.toggle('studio-control-active',studioInteractionMode===mode);b.setAttribute('aria-pressed',String(studioInteractionMode===mode));}}
+      const rotate=document.getElementById('studio-rotate-btn');if(rotate){rotate.textContent=studioAutoRotate?'◉ Auto swivel on':'◉ Auto swivel off';rotate.setAttribute('aria-pressed',String(studioAutoRotate));}
+      const motion=document.getElementById('studio-motion-btn');if(motion){motion.textContent=studioMotion?'✧ Motion on':'✧ Motion off';motion.setAttribute('aria-pressed',String(studioMotion));}
+      const hint=document.getElementById('studio-gesture-hint');if(hint)hint.textContent=studioInteractionMode==='move'?'Drag a piece to place it. Pinch or use + / − to zoom.':'Drag to orbit 360°. Tap a piece to select it. Pinch to zoom.';
     }
-
-    function syncThreeJSFortScene() {
-      if (!threeFortGroup || typeof THREE === 'undefined') return;
-      const signature = JSON.stringify([state.nightMode, state.placedPieces]);
-      if (signature === threeSceneSignature) return;
-      threeSceneSignature = signature;
-      threeScene.background.set(state.nightMode ? 0x090d16 : 0xbae6fd);
-      while (threeFortGroup.children.length > 0) {
-        const child = threeFortGroup.children[0];
-        child.traverse(obj => { if (obj.geometry) obj.geometry.dispose(); if (obj.material) obj.material.dispose(); });
-        threeFortGroup.remove(child);
-      }
-      threeDiscoGroup = null;
-
-      (state.placedPieces || []).forEach((p, idx) => {
-        const colHex = THREE_PALETTE_HEX[p.colorIdx ?? 0] || 0x3b82f6;
-        const mat = new THREE.MeshStandardMaterial({ color: colHex, roughness: 0.55 });
-        const x3d = ((p.x - 500) / 500) * 5.5;
-        const y3d = Math.max(0.35, ((500 - p.y) / 420) * 3.6);
-        const z3d = Number.isFinite(p.depth3d) ? p.depth3d : -0.6 + (idx % 5) * 0.42;
-
-        let mesh = null;
-        if (p.typeId === 'cush_pillar') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.9, 0.7), mat);
-        else if (p.typeId === 'cush_lean') mesh = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.45, 1.1), mat);
-        else if (p.typeId.includes('cush')) mesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.55, 1.1), mat);
-        else if (p.typeId === 'supp_chair') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.5, 0.95), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
-        else if (p.typeId.includes('blanket')) mesh = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.35, 4), mat);
-        else if (p.typeId === 'toy_trampoline') mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.3, 24), mat);
-        else if (p.typeId === 'toy_slide') { mesh = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.25, 0.9), mat); mesh.rotation.z = -0.45; }
-        else if (p.typeId === 'toy_disco') {
-          mesh = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), new THREE.MeshStandardMaterial({ color: 0xfef08a, metalness: 0.8, roughness: 0.15 }));
-          threeDiscoGroup = mesh;
-        } else mesh = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), mat);
-
-        if (mesh) {
-          const group = new THREE.Group();
-          group.add(mesh);
-          group.position.set(x3d, y3d, z3d);
-          group.rotation.z = -(p.rot || 0) * Math.PI / 180;
-          group.scale.set((p.scale || 1) * (p.flip || 1), p.scale || 1, p.scale || 1);
-          mesh.castShadow = true; mesh.receiveShadow = true;
-          group.userData.uid = p.uid;
-          threeFortGroup.add(group);
+    function setStudioInteractionMode(mode) {
+      studioInteractionMode=mode;if(mode==='move')studioAutoRotate=false;updateStudioControls();
+    }
+    function toggleStudioAutoRotate() {studioAutoRotate=!studioAutoRotate;updateStudioControls();}
+    function toggleStudioMotion() {studioMotion=!studioMotion;if(!studioMotion)studioAutoRotate=false;updateStudioControls();}
+    function zoomStudio3D(delta) {orbitTargetRadius=studioClamp(orbitTargetRadius+delta,7,23);}
+    function resetStudio3DCamera() {orbitTargetAngle=0.42;orbitTargetPitch=0.48;orbitTargetRadius=14.4;}
+    function turnStudioCamera() {orbitTargetAngle+=Math.PI/4;}
+    function pickStudioObject(el,x,y) {
+      const r=el.getBoundingClientRect();threeMouse.set(((x-r.left)/r.width)*2-1,-((y-r.top)/r.height)*2+1);
+      threeCamera.updateMatrixWorld();threeFortGroup.updateMatrixWorld(true);threeRaycaster.setFromCamera(threeMouse,threeCamera);
+      const hits=threeRaycaster.intersectObjects(threeFortGroup.children,true);if(!hits.length)return null;
+      let obj=hits[0].object;while(obj.parent&&obj.parent!==threeFortGroup)obj=obj.parent;return obj;
+    }
+    function attachStudioPointers(el) {
+      if(!el)return;
+      el.addEventListener('pointerdown',e=>{
+        if(e.button!==undefined&&e.button!==0)return;e.preventDefault();el.setPointerCapture(e.pointerId);
+        studioPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(studioPointers.size===2){const a=[...studioPointers.values()];pinchDistance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pinchRadius=orbitTargetRadius;
+          if(active3DDragObject){saveState();syncThreeJSFortScene();}active3DDragObject=null;pointerStart=null;return;}
+        pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,el};isOrbitDragging=true;
+        if(activeTopTab==='studio'&&isStudio3DActive&&studioInteractionMode==='move'){
+          const obj=pickStudioObject(el,e.clientX,e.clientY);selectedPieceUid=obj?.userData.uid||null;updateInspectorBarUI();
+          if(obj){active3DDragObject=obj;threePlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0,1,0),obj.position);
+            const point=new THREE.Vector3();threeDragOffset=threeRaycaster.ray.intersectPlane(threePlane,point)?obj.position.clone().sub(point):new THREE.Vector3();}
         }
       });
+      el.addEventListener('pointermove',e=>{
+        if(!studioPointers.has(e.pointerId))return;e.preventDefault();studioPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(studioPointers.size===2){const a=[...studioPointers.values()],distance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+          if(distance>8&&pinchDistance>8)orbitTargetRadius=studioClamp(pinchRadius*pinchDistance/distance,7,23);return;}
+        if(!pointerStart||pointerStart.id!==e.pointerId)return;
+        const dx=e.clientX-pointerStart.lastX,dy=e.clientY-pointerStart.lastY;pointerStart.lastX=e.clientX;pointerStart.lastY=e.clientY;
+        if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>5)pointerStart.moved=true;
+        if(active3DDragObject){const r=el.getBoundingClientRect();threeMouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);threeRaycaster.setFromCamera(threeMouse,threeCamera);
+          const hit=new THREE.Vector3();if(!threeRaycaster.ray.intersectPlane(threePlane,hit))return;hit.add(threeDragOffset);
+          active3DDragObject.position.x=studioClamp(hit.x,-6.2,6.2);active3DDragObject.position.z=studioClamp(hit.z,-4.9,4.9);
+          const p=state.placedPieces.find(p=>p.uid===active3DDragObject.userData.uid);if(p){p.x=Math.round(500+active3DDragObject.position.x/5.5*500);p.depth3d=active3DDragObject.position.z;}
+        }else{orbitTargetAngle-=dx*0.007;orbitTargetPitch=studioClamp(orbitTargetPitch+dy*0.006,0.12,1.35);}
+      });
+      const release=e=>{
+        if(!studioPointers.has(e.pointerId))return;studioPointers.delete(e.pointerId);
+        if(pointerStart?.id===e.pointerId&&!pointerStart.moved&&activeTopTab==='studio'&&isStudio3DActive&&e.type!=='pointercancel'){
+          const obj=pickStudioObject(el,e.clientX,e.clientY);selectedPieceUid=obj?.userData.uid||null;updateInspectorBarUI();
+          const p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(p&&MODULAR_CATALOG.find(c=>c.id===p.typeId)?.isInteractiveToy)triggerStudioToy(p.uid);
+        }
+        const moved=!!active3DDragObject;active3DDragObject=null;pointerStart=null;isOrbitDragging=studioPointers.size>0;
+        if(moved){saveState();renderFortSandbox();}
+      };
+      el.addEventListener('pointerup',release);el.addEventListener('pointercancel',release);el.addEventListener('lostpointercapture',release);
+      el.addEventListener('wheel',e=>{e.preventDefault();zoomStudio3D(e.deltaY*0.012);},{passive:false});
     }
-
-    function animateThreeJSLoop() {
+    function adjustSelected3DHeight(delta) {
+      const p=state.placedPieces.find(p=>p.uid===selectedPieceUid);if(!p)return;p.y=studioClamp(p.y-Math.round(delta*80),80,480);saveState();renderFortSandbox();
+    }
+    function disposeStudioObject(object) {
+      const geometries=new Set(),materials=new Set();object.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));});
+      geometries.forEach(g=>g.dispose());materials.forEach(m=>{if(!m.userData.sharedStudioMaterial){m.userData.ownedTexture?.dispose();m.dispose();}});
+    }
+    function syncThreeJSFortScene() {
+      if(!threeFortGroup||!threeScene)return;
+      const signature=JSON.stringify([state.nightMode,state.playerName,state.placedPieces]);if(signature===threeSceneSignature)return;threeSceneSignature=signature;
+      const wasInitialized=threeFortGroup.userData.initialized;const existing=new Map(threeFortGroup.children.map(g=>[g.userData.uid,g]));
+      state.placedPieces.forEach((p,idx)=>{
+        const appearance=JSON.stringify([p.typeId,p.colorIdx,p.typeId==='prop_sign'?state.playerName:'']);
+        let root=existing.get(p.uid);existing.delete(p.uid);
+        if(root&&root.userData.appearance!==appearance){disposeStudioObject(root);threeFortGroup.remove(root);root=null;}
+        if(!root){root=new THREE.Group();const model=buildStudioItem(p);root.add(model);root.userData={uid:p.uid,appearance,model,spawnAt:wasInitialized?threeElapsed:-100,pulseAt:-100};threeFortGroup.add(root);}
+        const floorOffset=root.userData.model.userData.floorOffset||0.3;
+        root.position.set(studioClamp((p.x-500)/500*5.5,-6.2,6.2),floorOffset+Math.max(0,(400-p.y)/420*3.6),Number.isFinite(p.depth3d)?p.depth3d:-0.6+(idx%5)*0.42);
+        root.rotation.z=-(p.rot||0)*Math.PI/180;root.userData.scale=p.scale||1;root.userData.flip=p.flip||1;
+        root.scale.set((p.scale||1)*(p.flip||1),p.scale||1,p.scale||1);
+      });
+      existing.forEach(root=>{disposeStudioObject(root);threeFortGroup.remove(root);});threeFortGroup.userData.initialized=true;
+      threeScene.background.set(state.nightMode?0x141d2c:0xa9bfd0);threeScene.fog.color.copy(threeScene.background);
+      threeFillLight.intensity=state.nightMode?0.85:1.15;threeKeyLight.intensity=state.nightMode?1.8:2.2;
+      threeRenderer.toneMappingExposure=state.nightMode?1.15:1.08;
+    }
+    function triggerStudioToy(uid) {const obj=threeFortGroup?.children.find(g=>g.userData.uid===uid);if(obj)obj.userData.pulseAt=threeElapsed;}
+    function animateThreeJSLoop(timestamp) {
       requestAnimationFrame(animateThreeJSLoop);
-      if (!threeRenderer || !threeScene || !threeCamera) return;
-      if (document.hidden || (activeTopTab !== 'quiz' && activeTopTab !== 'studio')) return;
-      if (!isStudio3DActive && activeTopTab !== 'quiz') return;
-      if (!isOrbitDragging && !isStudio3DActive) cameraOrbitAngle += 0.0025;
-      const radius = cameraOrbitRadius;
-      threeCamera.position.x = Math.sin(cameraOrbitAngle) * Math.cos(cameraOrbitPitch) * radius;
-      threeCamera.position.z = Math.cos(cameraOrbitAngle) * Math.cos(cameraOrbitPitch) * radius;
-      threeCamera.position.y = Math.sin(cameraOrbitPitch) * radius + 1.2;
-      threeCamera.lookAt(0, 1.1, -0.4);
-      if (threeDiscoGroup) threeDiscoGroup.rotation.y += 0.04;
-      threeRenderer.render(threeScene, threeCamera);
+      if(!threeRenderer||!threeScene||!threeCamera)return;
+      const now=Number.isFinite(timestamp)?timestamp:studioClock();const dt=threePreviousTime?studioClamp((now-threePreviousTime)/1000,0,0.05):1/60;threePreviousTime=now;
+      if(document.hidden||!['quiz','studio'].includes(activeTopTab)||(activeTopTab==='studio'&&!isStudio3DActive))return;
+      threeElapsed+=dt;const t=threeElapsed;
+      if(studioMotion&&!isOrbitDragging&&studioPointers.size===0&&(activeTopTab==='quiz'||studioAutoRotate))orbitTargetAngle+=dt*0.10;
+      const damping=1-Math.exp(-dt*12);cameraOrbitAngle+=(orbitTargetAngle-cameraOrbitAngle)*damping;cameraOrbitPitch+=(orbitTargetPitch-cameraOrbitPitch)*damping;cameraOrbitRadius+=(orbitTargetRadius-cameraOrbitRadius)*damping;
+      threeCamera.position.set(Math.sin(cameraOrbitAngle)*Math.cos(cameraOrbitPitch)*cameraOrbitRadius*Math.max(1,1.2/threeCamera.aspect),Math.sin(cameraOrbitPitch)*cameraOrbitRadius*Math.max(1,1.2/threeCamera.aspect)+1.25,Math.cos(cameraOrbitAngle)*Math.cos(cameraOrbitPitch)*cameraOrbitRadius*Math.max(1,1.2/threeCamera.aspect));
+      threeCamera.lookAt(0,1.1,-0.4);
+      roomTwinkles.forEach((m,i)=>m.emissiveIntensity=studioMotion?1.5+Math.sin(t*1.2+i*0.7)*0.35:1.5);
+      threeFortGroup.children.forEach((root,i)=>{
+        const model=root.userData.model,age=t-root.userData.spawnAt,pulse=t-root.userData.pulseAt;
+        const entrance=age<0.65&&studioMotion?1-Math.exp(-age*9)*Math.cos(age*15):1;
+        const bounce=pulse<1.2&&studioMotion?Math.sin(pulse*15)*Math.exp(-pulse*4)*0.24:0;
+        root.scale.set(root.userData.scale*root.userData.flip*entrance,root.userData.scale*entrance,root.userData.scale*entrance);
+        model.position.y=Math.max(0,bounce)*1.2;model.scale.set(1+Math.abs(bounce)*0.18,1-bounce*0.35,1+Math.abs(bounce)*0.18);
+        if(model.userData.spinner&&studioMotion)model.userData.spinner.rotation.y+=dt*0.7;
+        if(model.userData.bulbs)model.userData.bulbs.forEach((m,j)=>m.emissiveIntensity=studioMotion?1.6+Math.sin(t*1.5+j)*0.4:1.6);
+        const cloth=model.userData.cloth;if(cloth){const pos=cloth.geometry.attributes.position,rest=cloth.userData.clothRest;
+          for(let k=0;k<pos.count;k++)pos.setY(k,rest[k*3+1]+(studioMotion?Math.sin(t*1.25+rest[k*3]*2.2+rest[k*3+2])*0.018:0));
+          pos.needsUpdate=true;if(studioMotion&&Math.floor(t*20)%3===0)cloth.geometry.computeVertexNormals();}
+      });
+      const selected=threeFortGroup.children.find(g=>g.userData.uid===selectedPieceUid);threeSelectionRing.visible=!!selected&&activeTopTab==='studio';
+      if(selected){threeSelectionRing.position.set(selected.position.x,0.13,selected.position.z);threeSelectionRing.scale.setScalar((selected.userData.scale||1)*(1+(studioMotion?Math.sin(t*2)*0.035:0)));}
+      threeRenderer.render(threeScene,threeCamera);
     }
 
     const confettiCanvas = document.getElementById('confetti-canvas');
